@@ -32,7 +32,7 @@ function Login () {
             setLoading(false);
             dispatch({
                 type: 'LOGIN',
-                id: result.uid,
+                id: result.user.uid,
                 email: email
             })
         }).catch( err => {

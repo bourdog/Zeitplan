@@ -21,7 +21,8 @@ function userReducer (state = INITIAL_STATE, action) {
         case 'LOGIN':
             return { 
                 userLogin: true,
-                email: action.email
+                email: action.email,
+                id: action.id
             }
         case 'LOGOUT':
             return { 
@@ -30,6 +31,14 @@ function userReducer (state = INITIAL_STATE, action) {
                 lastName: null,
                 email: null,
                 birthDate: null
+            }
+        case 'CARD':
+            return {
+                title: action.title,
+                subTitle: action.subTitle,
+                description: action.description,
+                day: action.day,
+                hour: action.hour
             }
         default:    
             return state;

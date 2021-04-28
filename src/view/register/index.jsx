@@ -72,8 +72,6 @@ function Register () {
                     setTypeError('Ocorreu um erro inesperado. Por favor tente mais tarde.');
             }
         });
-
-        
     }
 
     return (
