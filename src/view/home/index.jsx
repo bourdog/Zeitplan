@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import NavbarSignIn from '../../components/navbar/navbarSignIn';
-import { BodyMain, MainCards, MainContainerContents, Reminders } from './homeCss';
+import Card from '../../components/card';
+import { BodyMain, Reminders, MainContainerContents } from './homeCss';
 import firebase from 'firebase';
 import { useDispatch, useSelector } from 'react-redux'
  
@@ -12,12 +13,14 @@ function Home () {
     const [day, setDay] = useState();
     const [hour, setHour] = useState();
     const [loading, setLoading] = useState(false);
-    const [cards, setCards] = useState(null);
+    const [cards, setCards] = useState([]);
 
     const db = firebase.firestore();
     const dispatch = useDispatch();
 
     const idUser = useSelector(state => state.id);
+    var ArrayOfCards = [];
+
 
     function searchDate (textDate) {
     
@@ -79,17 +82,19 @@ function Home () {
     }
 
     useEffect(()=> { 
-        async function getCards () {
-            await db.collection('userCards').where('id','==', idUser)
-            .get()
-            .then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    setCards(doc.data());
+        db.collection('userCards').where('id','==', idUser)
+        .get()
+        .then(async (querySnapshot) => {
+            await querySnapshot.forEach((doc) => {
+                ArrayOfCards.push({
+                    id: doc.id,
+                    ...doc.data()
                 });
-            }).catch(err => console.log(err))
-        }
-        getCards();
-    }, [db, idUser])
+            });
+            setCards(ArrayOfCards);
+        }).catch(err => console.log(err))
+
+    })
 
     return (
         <BodyMain>
@@ -115,36 +120,20 @@ function Home () {
                 </button>
             </div>
 
-            { cards && cards.map( element => {
-                return (
-                    <MainContainerContents key={element.id}>
-                        <MainCards>
-                            <div className="card-header checkboxDivDone d-flex justify-content-start">
-                                <label for="priorityCard" className="labelCheckbox">Prioritário:</label>
-                                <input type="checkbox" name="priorityCard" className="form-switch checkboxHome" />
-                            </div>
-                            <div className="card-body" id="mobileView">
-                                <h5 className="card-title mb-3"><strong>{element.title}</strong></h5>
-                                <h6 className="card-subtitle mb-3 text-muted">{element.subTitle}</h6>
-                                <p className="card-text">{element.description}</p>
-                                <div className="d-flex justify-content-between mb-3" id="containerDateDone1">
-                                    <small className="isDone"><strong>Data:</strong> {element.day} - {element.hour}</small>
-                                    <div className="checkboxDivDone">
-                                        <label for="reminderDone" className="labelCheckbox">Feito:</label>
-                                        <input type="checkbox" disabled name="isDone" id="reminderDone" className="checkboxHome" /> 
-                                    </div>
-                                </div>
-                                <div className="card-footer">
-                                    <div className="d-flex justify-content-between">
-                                        <button type="button" className="btn btn-danger btn-sm">Excluir</button>
-                                        <button type="button" className="btn btn-primary btn-sm" disabled>Editar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </MainCards>
-                    </MainContainerContents>
-                )
-            })}
+            <MainContainerContents className="d-flex flex-wrap justify-content-center">
+                { cards && cards.map((element, index) => {
+                    return (
+                        <Card 
+                            title={element.title} 
+                            subTitle={element.subTitle}
+                            description={element.description}
+                            day={element.day}
+                            hour={element.hour}
+                            key={index}
+                        />
+                    )
+                })}
+            </MainContainerContents>
 
             {/*<!-- Modal -->*/}
             <div className="modal fade" id="createModal" tabIndex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
