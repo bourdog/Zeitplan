@@ -32,7 +32,7 @@ function Register () {
         firebase.auth().createUserWithEmailAndPassword(
             email,
             password
-        ).then(()=> {
+        ).then(() => {
             db.collection('userProfile').add({
                 name: name,
                 lastName: lastName,
@@ -42,19 +42,18 @@ function Register () {
             }).then(() => {
                 setIsRegistered(true);
                 setLoading(false);
-                setTimeout(()=>{
-                    dispatch({
-                        type: 'REGISTER',
-                        name: name,
-                        lastName: lastName,
-                        birthDate: birthDate,
-                        email: email
-                    })
-                }, 1500)
             }).catch( err => {
                 setLoading(false);
-                
             });
+            setTimeout(()=>{
+                dispatch({
+                    type: 'REGISTER',
+                    name: name,
+                    lastName: lastName,
+                    birthDate: birthDate,
+                    email: email
+                })
+            }, 1500)
         }).catch( err => {
             setLoading(false);
             console.log(err);

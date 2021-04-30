@@ -12,28 +12,28 @@ function userReducer (state = INITIAL_STATE, action) {
         case 'REGISTER':
             return { 
                 userLogin: true,
-                id: action.id,
+                email: action.email,
                 name: action.name,
                 lastName: action.lastName,
-                birthDate: action.birthDate,
-                email: action.email
+                birthDate: action.birthDate
             }
         case 'LOGIN':
             return { 
                 userLogin: true,
-                email: action.email,
-                id: action.id
+                email: action.email
             }
         case 'LOGOUT':
             return { 
                 userLogin: false,
+                email: null,
                 name: null,
                 lastName: null,
-                email: null,
                 birthDate: null
             }
         case 'CARD':
             return {
+                userLogin: true,
+                email: action.email,
                 title: action.title,
                 subTitle: action.subTitle,
                 description: action.description,

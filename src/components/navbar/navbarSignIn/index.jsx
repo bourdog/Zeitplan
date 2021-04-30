@@ -9,12 +9,13 @@ function NavbarSignIn (props) {
     const emailUser = useSelector(state => state.email);
     const [nameUser, setNameUser] = useState('Usuário'); 
     const dispatch = useDispatch();
+    const db = firebase.firestore();
 
     const logout = () => {
         dispatch({
             type: 'LOGOUT'
         })
-        firebase.auth().signOut().then(()=>{
+        firebase.auth().signOut().then(() => {
             console.log('Usuário desconectado');
         }).catch( err => {
             console.log(err);
@@ -28,17 +29,20 @@ function NavbarSignIn (props) {
         return str.charAt(0).toUpperCase() + str.substr(1);
     }
 
-    useEffect (()=>{
-        firebase.firestore().collection("userProfile").where("email", "==", emailUser)
-        .get()
-        .then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                setNameUser(doc.data().name);
-            });
-        }).catch(err => console.log(err))
-    },[emailUser])
+    useEffect (() => {
+        const getNameFromUser = async () => {
+            await db.collection("userProfile").where("email", "==", emailUser)
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    setNameUser(doc.data().name);
+                });
+            }).catch(err => console.log(err))
+        }
+        getNameFromUser();
+    },[emailUser, db]);
 
-    useEffect (()=> {
+    useEffect (() => {
         const tabs = document.getElementsByClassName('nav-item');
         for (var i = 0; i < tabs.length; i++){
             tabs[i].classList.remove('active');

@@ -18,11 +18,11 @@ function Home () {
     const db = firebase.firestore();
     const dispatch = useDispatch();
 
-    const idUser = useSelector(state => state.id);
+    const emailUser = useSelector(state => state.email);
     var ArrayOfCards = [];
 
 
-    function searchDate (textDate) {
+    const searchDate = (textDate) => {
     
         if(textDate.length === 2 || textDate.length === 5){
             textDate = textDate + '/';
@@ -30,7 +30,7 @@ function Home () {
         }
     }
 
-    function controlDateField () {
+    const controlDateField = () => {
         var inputDate = document.getElementsByName("dateCreateCard")[0];
         var dateToday = new Date();
     
@@ -45,7 +45,7 @@ function Home () {
         inputDate.max = dateCompletedMax;
     }
     
-    function clearInputModal () {
+    const clearInputModal = () => {
         var clear = document.getElementsByClassName("clear");
     
         for(var i = 0; i < clear.length; i++) {
@@ -53,12 +53,17 @@ function Home () {
         }
     }
 
-    async function createCard () {
+    const handleSubmit = (callback) => (event) => {
+        event.preventDefault();
+        callback();
+    };
+
+    const createCard = () => {
 
         setLoading(true);
 
         db.collection('userCards').add({
-            id: idUser,
+            email: emailUser,
             title: title,
             subTitle: subTitle,
             description: description,
@@ -69,6 +74,7 @@ function Home () {
             setLoading(false);
             dispatch({
                 type: 'CARD',
+                email: emailUser,
                 title: title,
                 subTitle: subTitle,
                 description: description,
@@ -81,20 +87,19 @@ function Home () {
         });
     }
 
-    useEffect(()=> { 
-        db.collection('userCards').where('id','==', idUser)
-        .get()
-        .then(async (querySnapshot) => {
-            await querySnapshot.forEach((doc) => {
-                ArrayOfCards.push({
-                    id: doc.id,
-                    ...doc.data()
+    useEffect(() => { 
+        const getUserCards = async () => {
+            db.collection('userCards').where('email','==', emailUser)
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    ArrayOfCards.push(doc.data());
                 });
-            });
-            setCards(ArrayOfCards);
-        }).catch(err => console.log(err))
-
-    })
+                setCards(ArrayOfCards);
+            }).catch(err => console.log(err));
+        }
+        getUserCards();    
+    },[ArrayOfCards, emailUser, db]);
 
     return (
         <BodyMain>
@@ -147,13 +152,13 @@ function Home () {
                         </div>
                         <div className="modal-body" id="mainModal">
                             <div className="container d-flex justify-content-center">
-                                <form action="#" id="formCreateModal">
+                                <form onSubmit={ handleSubmit(createCard) } action="#" id="formCreateModal">
                                     <p><strong>Título:</strong></p>
                                     <input onChange={ e => setTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Reunião" required />
                                     <p><strong>Subtítulo:</strong></p>
                                     <input onChange={ e => setSubTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Contratar estágiarios" required />
                                     <p><strong>Descrição:</strong></p>
-                                    <textarea onChange={ e => setDescription(e.target.value)} className="form-control mb-2 clear" placeholder="Analisar cúrriculos, etc..." required></textarea>
+                                    <textarea onChange={ e => setDescription(e.target.value)} className="form-control mb-2 clear" placeholder="Analisar cúrriculos, etc..." required />
                                     <p><strong>Dia:</strong></p>
                                     <input onChange={ e => setDay(e.target.value)} className="form-control mb-2 clear" type="date" name="dateCreateCard" onClick={controlDateField} required />
                                     <p><strong>Hora:</strong></p>
@@ -177,7 +182,7 @@ function Home () {
                                 <button type="button" className="btn btn-danger" onClick={clearInputModal}>
                                     <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
                                 </button>
-                                <button onClick={ createCard } type="submit" className="btn btn-success" form="formCreateModal">
+                                <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal" form="formCreateModal">
                                     <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
                                 </button>
                             </div>

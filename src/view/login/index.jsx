@@ -27,12 +27,11 @@ function Login () {
         firebase.auth().signInWithEmailAndPassword(
             email,
             password
-        ).then( result => {
+        ).then(() => {
             setIsAuth(true);
             setLoading(false);
             dispatch({
                 type: 'LOGIN',
-                id: result.user.uid,
                 email: email
             })
         }).catch( err => {
