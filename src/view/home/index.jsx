@@ -12,15 +12,30 @@ function Home () {
     const [description, setDescription] = useState();
     const [day, setDay] = useState();
     const [hour, setHour] = useState();
+    const [priority, setPriority] = useState(false);
+    const [isDoneCard, setIsDoneCard] = useState(false);
     const [loading, setLoading] = useState(false);
     const [cards, setCards] = useState([]);
 
     const db = firebase.firestore();
     const dispatch = useDispatch();
 
-    const emailUser = useSelector(state => state.email);
     var ArrayOfCards = [];
 
+    const emailUser = useSelector(state => state.email);
+    const titleUp = useSelector(state => state.title)
+    const subTitleUp = useSelector(state => state.subTitle)
+    const descriptionUp = useSelector(state => state.description)
+    const dayUp = useSelector(state => state.day)
+    const hourUp = useSelector(state => state.hour)
+    const priorityUp = useSelector(state => state.priority)
+    
+    const [titleUpdate, setTitleUpdate] = useState(); 
+    const [subTitleUpdate, setSubTitleUpdate] = useState(); 
+    const [descriptionUpdate, setDescriptionUpdate] = useState(); 
+    const [dayUpdate, setDayUpdate] = useState(); 
+    const [hourUpdate, setHourUpdate] = useState(); 
+    const [priorityUpdate, setPriorityUpdate] = useState(); 
 
     const searchDate = (textDate) => {
     
@@ -69,6 +84,8 @@ function Home () {
             description: description,
             day: day,
             hour: hour,
+            priority: priority,
+            isDoneCard: isDoneCard,
             create: new Date()
         }).then(() => {
             setLoading(false);
@@ -79,7 +96,9 @@ function Home () {
                 subTitle: subTitle,
                 description: description,
                 day: day,
-                hour: hour
+                hour: hour,
+                priority: priority,
+                isDoneCard: isDoneCard,
             })
         }).catch( err => {
             setLoading(false);
@@ -93,13 +112,32 @@ function Home () {
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {
-                    ArrayOfCards.push(doc.data());
+                    ArrayOfCards.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
                 });
                 setCards(ArrayOfCards);
             }).catch(err => console.log(err));
         }
         getUserCards();    
     },[ArrayOfCards, emailUser, db]);
+
+    useEffect(() => {
+        setTitleUpdate(titleUp);
+        setSubTitleUpdate(subTitleUp);
+        setDescriptionUpdate(descriptionUp);
+        setDayUpdate(dayUp);
+        setHourUpdate(hourUp);
+        setPriorityUpdate(priorityUp);
+    }, [
+        titleUp,
+        subTitleUp,
+        descriptionUp,
+        dayUp,
+        hourUp,
+        priorityUp
+    ]);
 
     return (
         <BodyMain>
@@ -129,11 +167,15 @@ function Home () {
                 { cards && cards.map((element, index) => {
                     return (
                         <Card 
+                            email={emailUser}
                             title={element.title} 
                             subTitle={element.subTitle}
                             description={element.description}
                             day={element.day}
                             hour={element.hour}
+                            priority={element.priority}
+                            isDoneCard={element.isDoneCard}
+                            id={element.id}
                             key={index}
                         />
                     )
@@ -163,6 +205,70 @@ function Home () {
                                     <input onChange={ e => setDay(e.target.value)} className="form-control mb-2 clear" type="date" name="dateCreateCard" onClick={controlDateField} required />
                                     <p><strong>Hora:</strong></p>
                                     <input onChange={ e => setHour(e.target.value)} className="form-control mb-2 clear" type="time" required />
+                                    <div className="d-flex form-check align-items-center mb-2 clear">
+                                        <input onChange={ e => setPriority(e.target.value)} className="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" />
+                                        <label className="form-check-label" for="exampleRadios1">
+                                            <p><strong>Prioritario</strong></p>       
+                                        </label>
+                                    </div>                                
+                                </form>
+                            </div>
+                        </div>
+                        { loading === true ? (
+                            <div className="modal-footer">
+                                <div className="d-flex justify-content-center my-4">
+                                    <div className="spinner-border" role="status">
+                                        <span className="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                                    <i className="bi bi-x-circle buttonNotItalic"> Fechar</i>            
+                                </button>
+                                <button type="button" className="btn btn-danger" onClick={clearInputModal}>
+                                    <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
+                                </button>
+                                <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal" form="formCreateModal">
+                                    <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
+                                </button>
+                            </div>
+                    )}
+                    </div>
+                </div>
+            </div>
+            {/*<!-- /Modal -->*/}
+
+            {/*<!-- Modal 2 -->*/}
+            <div className="modal fade" id="createModal2" tabIndex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content" id="contentModal">
+                        <div className="modal-header" id="headerModal">
+                            <h5 className="modal-title h1" id="createModalLabel">Editar lembrete</h5>
+                            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true" id="closerButton">&times;</span>
+                            </button>
+                        </div>
+                        <div className="modal-body" id="mainModal">
+                            <div className="container d-flex justify-content-center">
+                                <form onSubmit={ handleSubmit(createCard) } action="#" id="formCreateModal">
+                                    <p><strong>Título:</strong></p>
+                                    <input onChange={ e => setTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Reunião" value={ titleUpdate } required />
+                                    <p><strong>Subtítulo:</strong></p>
+                                    <input onChange={ e => setSubTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Contratar estágiarios" required />
+                                    <p><strong>Descrição:</strong></p>
+                                    <textarea onChange={ e => setDescription(e.target.value)} className="form-control mb-2 clear" placeholder="Analisar cúrriculos, etc..." required />
+                                    <p><strong>Dia:</strong></p>
+                                    <input onChange={ e => setDay(e.target.value)} className="form-control mb-2 clear" type="date" name="dateCreateCard" onClick={controlDateField} required />
+                                    <p><strong>Hora:</strong></p>
+                                    <input onChange={ e => setHour(e.target.value)} className="form-control mb-2 clear" type="time" required />
+                                    <div className="d-flex form-check align-items-center mb-2 clear">
+                                        <input onChange={ e => setPriority(e.target.value)} className="form-check-input" type="radio" name="exampleRadios" id="exampleRadios1" />
+                                        <label className="form-check-label" for="exampleRadios1">
+                                            <p><strong>Prioritario</strong></p>       
+                                        </label>
+                                    </div>                                
                                 </form>
                             </div>
                         </div>

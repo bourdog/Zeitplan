@@ -38,7 +38,9 @@ function userReducer (state = INITIAL_STATE, action) {
                 subTitle: action.subTitle,
                 description: action.description,
                 day: action.day,
-                hour: action.hour
+                hour: action.hour,
+                priority: action.priority,
+                isDoneCard: action.isDoneCard
             }
         default:    
             return state;
