@@ -1,16 +1,16 @@
 const INITIAL_STATE = {
     userLogin: false,
-    id: "",
+    email: "",
     name: "",
     lastName: "",
-    email: "",
-    birthDate: ""
+    birthDate: "",
 };
 
 function userReducer (state = INITIAL_STATE, action) {
     switch (action.type) {
         case 'REGISTER':
             return { 
+                ...state,
                 userLogin: true,
                 email: action.email,
                 name: action.name,
@@ -19,28 +19,18 @@ function userReducer (state = INITIAL_STATE, action) {
             }
         case 'LOGIN':
             return { 
+                ...state,
                 userLogin: true,
                 email: action.email
             }
         case 'LOGOUT':
             return { 
+                ...state,
                 userLogin: false,
                 email: null,
                 name: null,
                 lastName: null,
                 birthDate: null
-            }
-        case 'CARD':
-            return {
-                userLogin: true,
-                email: action.email,
-                title: action.title,
-                subTitle: action.subTitle,
-                description: action.description,
-                day: action.day,
-                hour: action.hour,
-                priority: action.priority,
-                isDoneCard: action.isDoneCard
             }
         default:    
             return state;

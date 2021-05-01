@@ -14,7 +14,7 @@ import Register from './view/register';
 
 const PrivateRoute = ({component: Component, ...rest}) => {
 
-  const isAuth = useSelector(state => state.userLogin);
+  const isAuth = useSelector(state => state.user.userLogin);
 
   return (
       <Route {...rest} render={props => (

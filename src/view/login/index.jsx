@@ -61,7 +61,7 @@ function Login () {
                         <button onClick={authenticated} type="submit">Entrar</button>
                     )}
                     {isAuth === false && <span>Email ou senha incorretos. ⚠️</span>}
-                    {useSelector(state => state.userLogin) === true && <Redirect to='/' />}
+                    {useSelector(state => state.user.userLogin) === true && <Redirect to='/' />}
                 </Box>
             </ContainerLogin>
         </>
