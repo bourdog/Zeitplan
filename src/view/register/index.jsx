@@ -131,7 +131,7 @@ function Register () {
                             <span className='text-danger'>{typeError} ⚠️</span>
                         </div>
                     )}
-                    { useSelector(state => state.userLogin === true && <Redirect to='/' />) }
+                    { useSelector(state => state.user.userLogin === true && <Redirect to='/' />) }
                 </section>
             </main>
         </>
