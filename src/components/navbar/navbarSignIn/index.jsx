@@ -6,7 +6,7 @@ import firebase from '../../../config/firebase';
 
 function NavbarSignIn (props) {
 
-    const emailUser = useSelector(state => state.email);
+    const emailUser = useSelector(state => state.user.email);
     const [nameUser, setNameUser] = useState('Usuário'); 
     const dispatch = useDispatch();
     const db = firebase.firestore();
@@ -30,8 +30,8 @@ function NavbarSignIn (props) {
     }
 
     useEffect (() => {
-        const getNameFromUser = async () => {
-            await db.collection("userProfile").where("email", "==", emailUser)
+        const getNameFromUser = () => {
+            db.collection("userProfile").where("email", "==", emailUser)
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {
@@ -40,7 +40,7 @@ function NavbarSignIn (props) {
             }).catch(err => console.log(err))
         }
         getNameFromUser();
-    },[emailUser, db]);
+    },[]);
 
     useEffect (() => {
         const tabs = document.getElementsByClassName('nav-item');

@@ -12,19 +12,19 @@ export const BodyMain = styled.main `
     }
 
     /* --- Modal --- */
-    #headerModal{
+    .headerModal{
         background-color: black;
     }
 
-    #closerButton {
+    .closerButton {
         color: white;
     }
 
-    #createModalLabel {
+    .modalLabel {
         color: white;
     }
 
-    #formCreateModal {
+    .formCreateModal {
         display: flex;
         flex-direction: column;
         align-items: center;

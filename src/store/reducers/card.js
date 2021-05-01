@@ -18,6 +18,7 @@ function cardReducer (state = INITIAL_STATE, action) {
                 ...state,
                 id: action.id,
                 email: action.email,
+                isUpdate: action.isUpdate,
                 title: action.title,
                 subTitle: action.subTitle,
                 description: action.description,

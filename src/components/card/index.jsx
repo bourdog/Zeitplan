@@ -11,14 +11,20 @@ function Card ({
     day, 
     hour,
     priority,
-    isDoneCard,
+    isDone,
     id
 }) {
     const db = firebase.firestore();
     const dispatch = useDispatch();
+    
+    const [statePriority, setStatePriority] = useState(priority);
+    const [stateIsDone, setStateIsDone] = useState(isDone);
+
+    console.log('priority =',priority)
+    console.log('isDone =',isDone)
 
 
-    const updateCard = id => {
+    const getDataCard = id => {
         db.collection('userCards')
         .doc(id)
         .get()
@@ -26,23 +32,45 @@ function Card ({
             dispatch({
                 type: 'CARD',
                 email: email,
+                id: id,
+                isUpdate: true,
                 title: result.data().title,
                 subTitle: result.data().subTitle,
                 description: result.data().description,
                 day: result.data().day,
                 hour: result.data().hour,
                 priority: result.data().priority,
-                isDoneCard: result.data().isDoneCard
+                isDone: result.data().isDone
             })
         })
         .catch(err => console.log(err));
+    }
+
+    const updateCheckboxPriority = id => {
+        db.collection('userCards')
+        .doc(id)
+        .update({
+            priority: statePriority ? false : true
+        })
+        .then(() => console.log('atualizou o priority'))
+        .catch(err => console.log('erro ao atualizar checkbox = ',err));
+    }
+
+    const updateCheckboxIsDone = id => {
+        db.collection('userCards')
+        .doc(id)
+        .update({
+            isDone: stateIsDone ? false : true
+        })
+        .then(() => console.log('atualizou o isDone'))
+        .catch(err => console.log('erro ao atualizar checkbox = ',err));
     }
 
     return (
         <MainCards>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
-                <input type="checkbox" name="priorityCard" checked={priority} className="form-switch checkboxHome" />
+                <input onClick={() => updateCheckboxPriority(id) } type="checkbox" name="priorityCard" onChange={e => setStatePriority(e.target.value)} defaultChecked={ statePriority } className="form-switch checkboxHome" />
             </div>
             <div className="card-body" id="mobileView">
                 <h5 className="card-title mb-3"><strong>{title}</strong></h5>
@@ -52,13 +80,13 @@ function Card ({
                     <small className="isDone"><strong>Data:</strong> {day} - {hour}</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>
-                        <input type="checkbox" name="isDone" id="reminderDone" checked={isDoneCard} className="checkboxHome" /> 
+                        <input onClick={() => updateCheckboxIsDone(id) } type="checkbox" name="isDone" id="reminderDone" onChange={e => setStateIsDone(e.target.value)}  defaultChecked={ stateIsDone } className="checkboxHome" /> 
                     </div>
                 </div>
                 <div className="card-footer">
                     <div className="d-flex justify-content-between">
                         <button type="button" className="btn btn-danger btn-sm">Excluir</button>
-                        <button onClick={ updateCard(id) } data-toggle="modal" data-target="#createModal2" type="button" className="btn btn-primary btn-sm">Editar</button>
+                        <button onClick={ () => { getDataCard(id) } } data-toggle="modal" data-target="#editModal" type="button" className="btn btn-primary btn-sm">Editar</button>
                     </div>
                 </div>
             </div>
