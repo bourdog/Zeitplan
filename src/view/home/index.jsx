@@ -30,7 +30,6 @@ function Home () {
     const emailUser = useSelector(state => state.user.email);
     const idCardEdit = useSelector(state => state.card.id);
     const isUpdating = useSelector(state => state.card.isUpdate);
-    const cardEdit = useSelector(state => state.card);
 
     var ArrayOfCards = [];
 
@@ -72,10 +71,10 @@ function Home () {
     };
 
     const createCard = () => {
-
         setLoading(true);
 
-        db.collection('userCards').add({
+        db.collection('userCards')
+        .add({
             email: emailUser,
             title: createTitle,
             subTitle: createSubTitle,
@@ -86,28 +85,16 @@ function Home () {
             isDone: false,
             create: new Date()
         }).then(() => {
+            console.log('Card criado.');
             setLoading(false);
-            dispatch({
-                type: 'CARD',
-                email: emailUser,
-                title: createTitle,
-                subTitle: createSubTitle,
-                description: createDescription,
-                day: createDay,
-                hour: createHour,
-                priority: createPriority,
-                isDone: false,
-                isUpdate: false
-            });
             clearInputModal();
         }).catch( err => {
             setLoading(false);
-            console.log(err);
+            console.log('Erro ao criar card.', err);
         });
     }
 
     const updateCard = id => {
-        setLoading(true);
         db.collection('userCards')
         .doc(id)
         .update({
@@ -120,18 +107,32 @@ function Home () {
         })
         .then(() => {
             console.log('Card atualizado.');
-            setLoading(false);
+            dispatch({
+                type: 'CARD',
+                email: emailUser,
+                id: id,
+                title: editTitle,
+                subTitle: editSubTitle,
+                description: editDescription,
+                day: editDay,
+                hour: editHour,
+                priority: editPriority,
+                isUpdate: false
+            });
+            setLoading(true);
         })
         .catch(err => {
             console.log('erro ao editar card.', err);
-            setLoading(false);
+            setLoading(true);
         });
+        setLoading(false);
     }
 
     useEffect(() => { 
-        const getUserCards = () => {
+        const getUserCards = async () => {
             if(emailUser){
-                db.collection('userCards').where('email','==', emailUser)
+                await db.collection('userCards')
+                .where('email','==', emailUser)
                 .get()
                 .then(querySnapshot => {
                     querySnapshot.forEach(doc => {
@@ -149,24 +150,24 @@ function Home () {
 
     useEffect(() => {
         if(isUpdating) {
-            setEditTitle(cardEdit.title);
-            setEditSubTitle(cardEdit.subTitle);
-            setEditDescription(cardEdit.description);
-            setEditDay(cardEdit.day);
-            setEditHour(cardEdit.hour);
-            setEditPriority(cardEdit.priority);
-            dispatch({ 
-                type: 'CARD', 
-                title: editTitle,
-                subTitle: editSubTitle,
-                description: editDescription,
-                day: editDay,
-                hour: editHour,
-                priority: editPriority,
-                isUpdate: false
-            });
+            setLoading(true);
+            if(idCardEdit) {
+                db.collection('userCards')
+                .doc(idCardEdit)
+                .get()
+                .then(result => {
+                    setEditTitle(result.data().title);
+                    setEditSubTitle(result.data().subTitle);
+                    setEditDescription(result.data().description);
+                    setEditDay(result.data().day);
+                    setEditHour(result.data().hour);
+                    setEditPriority(result.data().priority);
+                    setLoading(false);
+                })
+                .catch(err => console.log('erro: ', err));
+            }
         }
-    }, [cardEdit]);
+    }, [isUpdating]);
 
     return (
         <BodyMain>
@@ -235,7 +236,7 @@ function Home () {
                                     <p><strong>Hora:</strong></p>
                                     <input onChange={ e => setCreateHour(e.target.value)} className="form-control mb-2 clear" type="time" required />
                                     <div className="d-flex form-check align-items-center mb-2 clear">
-                                        <input onChange={ e => setCreatePriority(e.target.value)} className="form-check-input" type="checkbox" id="createCheckbox" />
+                                        <input onChange={ e => setCreatePriority(e.target.checked)} className="form-check-input" defaultChecked={ false } type="checkbox" id="createCheckbox" />
                                         <label className="form-check-label mt-2" htmlFor="createCheckbox">
                                             <strong>Prioritario</strong>      
                                         </label>
@@ -243,27 +244,27 @@ function Home () {
                                 </form>
                             </div>
                         </div>
-                        { loading === true ? (
-                            <div className="modal-footer">
+                        <div className="modal-footer">
+                            { loading === true ? (
                                 <div className="d-flex justify-content-center my-4">
                                     <div className="spinner-border" role="status">
                                         <span className="sr-only">Loading...</span>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" data-dismiss="modal">
-                                    <i className="bi bi-x-circle buttonNotItalic"> Fechar</i>            
-                                </button>
-                                <button type="button" className="btn btn-danger" onClick={clearInputModal}>
-                                    <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
-                                </button>
-                                <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal">
-                                    <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
-                                </button>
-                            </div>
-                    )}
+                            ) : (
+                                <>
+                                    <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                                        <i className="bi bi-x-circle buttonNotItalic"> Fechar</i>            
+                                    </button>
+                                    <button type="button" className="btn btn-danger" onClick={clearInputModal}>
+                                        <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
+                                    </button>
+                                    <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal">
+                                        <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -282,17 +283,17 @@ function Home () {
                             <div className="container d-flex justify-content-center">
                                 <form onSubmit={ handleSubmit(createCard) } action="#" className="formCreateModal">
                                     <p><strong>Título:</strong></p>
-                                    <input onChange={ e => setEditTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Reunião" defaultValue={ editTitle } required />
+                                    <input onChange={ e => setEditTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Reunião" value={ editTitle ? editTitle : "" } required />
                                     <p><strong>Subtítulo:</strong></p>
-                                    <input onChange={ e => setEditSubTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Contratar estágiarios" defaultValue={ editSubTitle } required />
+                                    <input onChange={ e => setEditSubTitle(e.target.value)} className="form-control mb-2 clear" type="text" placeholder="Contratar estágiarios" value={ editSubTitle ? editSubTitle : "" } required />
                                     <p><strong>Descrição:</strong></p>
-                                    <textarea onChange={ e => setEditDescription(e.target.value)} className="form-control mb-2 clear" placeholder="Analisar cúrriculos, etc..." defaultValue={ editDescription} required />
+                                    <textarea onChange={ e => setEditDescription(e.target.value)} className="form-control mb-2 clear" placeholder="Analisar cúrriculos, etc..." value={ editDescription ? editDescription : ""} required />
                                     <p><strong>Dia:</strong></p>
-                                    <input onChange={ e => setEditDay(e.target.value)} className="form-control mb-2 clear" type="date" name="dateCreateCard" onClick={controlDateField} defaultValue={ editDay } required />
+                                    <input onChange={ e => setEditDay(e.target.value)} className="form-control mb-2 clear" type="date" name="dateCreateCard" onClick={controlDateField} value={ editDay ? editDay : "" } required />
                                     <p><strong>Hora:</strong></p>
-                                    <input onChange={ e => setEditHour(e.target.value)} className="form-control mb-2 clear" type="time" defaultValue={ editHour } required />
+                                    <input onChange={ e => setEditHour(e.target.value)} className="form-control mb-2 clear" type="time" value={ editHour ? editHour : "" } required />
                                     <div className="d-flex form-check align-items-center mb-2 clear">
-                                        <input onChange={ e => setEditPriority(e.target.value)} className="form-check-input" type="checkbox" id="editCheckbox2" defaultValue={ editPriority} />
+                                        <input onChange={ e => setEditPriority(e.target.checked)} className="form-check-input" type="checkbox" id="editCheckbox2" checked={ editPriority } />
                                         <label className="form-check-label mt-2" htmlFor="editCheckbox2">
                                             <strong>Prioritario</strong>      
                                         </label>
@@ -300,27 +301,27 @@ function Home () {
                                 </form>
                             </div>
                         </div>
-                        { loading === true ? (
-                            <div className="modal-footer">
+                        <div className="modal-footer">
+                            { loading === true ? (
                                 <div className="d-flex justify-content-center my-4">
                                     <div className="spinner-border" role="status">
                                         <span className="sr-only">Loading...</span>
                                     </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" data-dismiss="modal">
-                                    <i className="bi bi-x-circle buttonNotItalic"> Fechar</i>            
-                                </button>
-                                <button type="button" className="btn btn-danger" onClick={clearInputModal}>
-                                    <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
-                                </button>
-                                <button onClick={ () => updateCard(idCardEdit) } type="submit" className="btn btn-success" data-dismiss="modal">
-                                    <i className="bi bi-check-circle buttonNotItalic"> Editar</i>
-                                </button>
-                            </div>
-                    )}
+                            ) : (
+                                <>
+                                    <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                                        <i className="bi bi-x-circle buttonNotItalic"> Fechar</i>            
+                                    </button>
+                                    <button type="button" className="btn btn-danger" onClick={clearInputModal}>
+                                        <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
+                                    </button>
+                                    <button onClick={ () => { updateCard(idCardEdit) } } type="submit" className="btn btn-success" data-dismiss="modal">
+                                        <i className="bi bi-check-circle buttonNotItalic"> Editar</i>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -67,7 +67,7 @@ function NavbarSignIn (props) {
                             <Link className="nav-item nav-link" to="/">{capitalizeName(nameUser)}</Link>
                             <Link className="nav-item nav-link" to="/overview">Overview</Link>
                             <Link className="nav-item nav-link" to="/profile">Profile</Link>
-                            <Link className="nav-item nav-link" to="/login" onClick={ logout }>Sign out</Link>
+                            <Link className="nav-item nav-link" to="/login" onClick={ logout }>SignOut</Link>
                         </div>
                     </div>
                 </div>

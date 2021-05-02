@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MainCards } from './cardCss';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import firebase from 'firebase';
 
 function Card ({ 
@@ -25,7 +25,7 @@ function Card ({
         var isChecked = document.getElementsByName("priorityCard");
         
         for(var i = 0; i < isChecked.length; i++){
-            if(isChecked[i].checked == true) {
+            if(isChecked[i].checked === true) {
                 isChecked[i].parentNode.classList.add("priorityCard");
             } else {
                 isChecked[i].parentNode.classList.remove("priorityCard");
@@ -39,7 +39,7 @@ function Card ({
         var isDone = document.getElementsByName("isDone");
         
         for(var i = 0; i < isDone.length; i++){
-            if(isDone[i].checked == true) {
+            if(isDone[i].checked === true) {
                 isDone[i].parentNode.parentNode.classList.add("addIsDone");
             } else {
                 isDone[i].parentNode.parentNode.classList.remove("addIsDone");
@@ -53,6 +53,7 @@ function Card ({
         .doc(id)
         .get()
         .then(result => {
+            console.log('card encontrado!');
             dispatch({
                 type: 'CARD',
                 email: email,
@@ -91,9 +92,14 @@ function Card ({
     }
 
     useEffect(() => {
+        setStatePriority(priority);
+        setStateIsDone(isDone);
+    }, [priority, isDone]);
+
+    useEffect(() => {
         priorityCard();
         cardIsDone();
-    },[]);
+    }, [statePriority, stateIsDone]);
 
     return (
         <MainCards>
@@ -104,10 +110,10 @@ function Card ({
                     type="checkbox" 
                     name="priorityCard" 
                     onChange={e => {
-                        setStatePriority(e.target.value);
+                        setStatePriority(e.target.checked);
                         priorityCard();
                     }} 
-                    defaultChecked={ statePriority } 
+                    checked={ statePriority } 
                     className="form-switch checkboxHome" 
                 />
             </div>
@@ -125,10 +131,10 @@ function Card ({
                             name="isDone" 
                             id="reminderDone" 
                             onChange={e => {
-                                setStateIsDone(e.target.value);
+                                setStateIsDone(e.target.checked);
                                 cardIsDone();
                             }}  
-                            defaultChecked={ stateIsDone } 
+                            checked={ stateIsDone } 
                             className="checkboxHome" 
                         /> 
                     </div>

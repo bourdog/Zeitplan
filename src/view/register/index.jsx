@@ -17,6 +17,7 @@ function Register () {
     const [birthDate, setBirthDate] = useState();
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
+    const [confirmPassword, setConfirmPassword] = useState();
     const [isRegistered, setIsRegistered] = useState();
     const [loading, setLoading] = useState(false);
     const [typeError, setTypeError] = useState();
@@ -24,7 +25,36 @@ function Register () {
     const db = firebase.firestore();
     const dispatch = useDispatch();
 
-    function userRegister () {
+    const equalPassword = () => {
+
+        const inputPassword = document.getElementsByName('inputPassword')[0];
+        const inputConfirmPassword = document.getElementsByName('inputPassword')[1];
+        
+        if(inputPassword.value !== inputConfirmPassword.value) {
+            inputPassword.classList.add("notEqualPassword"); 
+            inputConfirmPassword.classList.add("notEqualPassword"); 
+        } else {
+            inputPassword.classList.remove("notEqualPassword"); 
+            inputConfirmPassword.classList.remove("notEqualPassword"); 
+        }
+    }
+
+    const controlDateField = () => {
+        var inputDate = document.getElementsByName("dateCreateUser")[0];
+        var dateToday = new Date();
+    
+        var day = dateToday.getDate();
+        var month = dateToday.getMonth() + 1;
+        var year = dateToday.getFullYear();
+    
+        var dateCompletedMin = `${year - 200}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
+        var dateCompletedMax = `${year}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
+    
+        inputDate.min = dateCompletedMin;
+        inputDate.max = dateCompletedMax;
+    }
+
+    const userRegister = () => {
 
         setLoading(true);
         setTypeError(null);
@@ -32,8 +62,9 @@ function Register () {
         firebase.auth().createUserWithEmailAndPassword(
             email,
             password
-        ).then(() => {
+        ).then(result => {
             db.collection('userProfile').add({
+                id: result.user.uid,
                 name: name,
                 lastName: lastName,
                 birthDate: birthDate,
@@ -91,15 +122,42 @@ function Register () {
                                 <p><strong>Sobrenome:</strong></p>
                                 <input onChange={ e => setLastName(e.target.value)} className="form-control mb-2" type="text" placeholder="Seu sobrenome" required />
                                 <p><strong>Data de nascimento:</strong></p>
-                                <input onChange={ e => setBirthDate(e.target.value)} className="form-control mb-2" type="date" required />
+                                <input 
+                                    onChange={ e => setBirthDate(e.target.value)} 
+                                    onClick={controlDateField}
+                                    className="form-control mb-2" 
+                                    type="date" 
+                                    name="dateCreateUser" 
+                                    required 
+                                />
                             </div>
                             <div className="container">
                                 <p><strong>E-mail:</strong></p>
                                 <input onChange={ e => setEmail(e.target.value)} className="form-control mb-2" type="text" placeholder="Seu e-mail" required />
                                 <p><strong>Senha:</strong></p>
-                                <input onChange={ e => setPassword(e.target.value)} className="form-control mb-2" type="password" placeholder="********" required />
+                                <input 
+                                    onChange={ e => {
+                                        setPassword(e.target.value)
+                                        equalPassword();
+                                    }} 
+                                    name="inputPassword" 
+                                    className="form-control mb-2" 
+                                    type="password" 
+                                    placeholder="********" 
+                                    required 
+                                />
                                 <p><strong>Confirmar senha:</strong></p>
-                                <input className="form-control mb-2" type="password" placeholder="********" required />
+                                <input 
+                                    onChange={ e => {
+                                        setConfirmPassword(e.target.value)
+                                        equalPassword();
+                                    }} 
+                                    name="inputPassword" 
+                                    className="form-control mb-2" 
+                                    type="password" 
+                                    placeholder="********" 
+                                    required 
+                                />
                             </div>                    
                         </FormProfile>                
                     </div>
@@ -116,9 +174,20 @@ function Register () {
                                     <i className="bi bi-backspace buttonNotItalic"> Voltar</i>
                                 </button>
                             </Link>                
-                            <button onClick={ userRegister } type="submit" className="btn btn-success btn-lg mt-4" form="formRegister">
+                            <button 
+                                onClick={ userRegister } 
+                                disabled={ password === confirmPassword ? false : true }
+                                type="submit" 
+                                className="btn btn-success btn-lg mt-4" 
+                                form="formRegister"
+                            >
                                 <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
                             </button>
+                        </div>
+                    )}
+                    { password !== confirmPassword && (
+                        <div className="container d-flex justify-content-center">
+                            <span className='text-danger'>Senhas distintas. ❌</span>
                         </div>
                     )}
                     {isRegistered === true && (
@@ -128,7 +197,7 @@ function Register () {
                     )}
                     {typeError !== null && (
                         <div className="container d-flex justify-content-center">
-                            <span className='text-danger'>{typeError} ⚠️</span>
+                            <span className='text-danger'>{ typeError }</span>
                         </div>
                     )}
                     { useSelector(state => state.user.userLogin === true && <Redirect to='/' />) }
