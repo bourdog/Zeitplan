@@ -98,7 +98,8 @@ function Home () {
                 priority: createPriority,
                 isDone: false,
                 isUpdate: false
-            })
+            });
+            clearInputModal();
         }).catch( err => {
             setLoading(false);
             console.log(err);
@@ -106,6 +107,7 @@ function Home () {
     }
 
     const updateCard = id => {
+        setLoading(true);
         db.collection('userCards')
         .doc(id)
         .update({
@@ -116,8 +118,14 @@ function Home () {
             hour: editHour,
             priority: editPriority
         })
-        .then(() => console.log('Card atualizado.'))
-        .catch(err => console.log('erro ao editar card.', err));
+        .then(() => {
+            console.log('Card atualizado.');
+            setLoading(false);
+        })
+        .catch(err => {
+            console.log('erro ao editar card.', err);
+            setLoading(false);
+        });
     }
 
     useEffect(() => { 
@@ -137,7 +145,7 @@ function Home () {
             }
         }
         getUserCards();    
-    },[loading]);
+    }, [loading]);
 
     useEffect(() => {
         if(isUpdating) {
@@ -147,8 +155,17 @@ function Home () {
             setEditDay(cardEdit.day);
             setEditHour(cardEdit.hour);
             setEditPriority(cardEdit.priority);
+            dispatch({ 
+                type: 'CARD', 
+                title: editTitle,
+                subTitle: editSubTitle,
+                description: editDescription,
+                day: editDay,
+                hour: editHour,
+                priority: editPriority,
+                isUpdate: false
+            });
         }
-
     }, [cardEdit]);
 
     return (
@@ -219,7 +236,7 @@ function Home () {
                                     <input onChange={ e => setCreateHour(e.target.value)} className="form-control mb-2 clear" type="time" required />
                                     <div className="d-flex form-check align-items-center mb-2 clear">
                                         <input onChange={ e => setCreatePriority(e.target.value)} className="form-check-input" type="checkbox" id="createCheckbox" />
-                                        <label className="form-check-label" htmlFor="createCheckbox">
+                                        <label className="form-check-label mt-2" htmlFor="createCheckbox">
                                             <strong>Prioritario</strong>      
                                         </label>
                                     </div>  
@@ -242,7 +259,7 @@ function Home () {
                                 <button type="button" className="btn btn-danger" onClick={clearInputModal}>
                                     <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
                                 </button>
-                                <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal" form="formCreateModal">
+                                <button onClick={ createCard } type="submit" className="btn btn-success" data-dismiss="modal">
                                     <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
                                 </button>
                             </div>
@@ -299,8 +316,8 @@ function Home () {
                                 <button type="button" className="btn btn-danger" onClick={clearInputModal}>
                                     <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
                                 </button>
-                                <button onClick={ () => updateCard(idCardEdit) } type="submit" className="btn btn-success" data-dismiss="modal" form="formCreateModal">
-                                    <i className="bi bi-check-circle buttonNotItalic"> Salvar</i>
+                                <button onClick={ () => updateCard(idCardEdit) } type="submit" className="btn btn-success" data-dismiss="modal">
+                                    <i className="bi bi-check-circle buttonNotItalic"> Editar</i>
                                 </button>
                             </div>
                     )}

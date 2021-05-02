@@ -57,6 +57,7 @@ export const MainContainerContents = styled.div `
     .checkboxDivDone {
         display: flex;
         align-items: center;
+        transition: all .4s !important;
 
         .labelCheckbox {
             font-size: small;

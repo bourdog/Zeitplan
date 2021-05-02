@@ -25,8 +25,7 @@ function cardReducer (state = INITIAL_STATE, action) {
                 day: action.day,
                 hour: action.hour,
                 priority: action.priority,
-                isDone: action.isDone,
-                isUpdate: action.isUpdate
+                isDone: action.isDone
             }
         case 'CARD_UPDATED':
             return {

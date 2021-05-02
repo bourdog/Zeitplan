@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MainCards } from './cardCss';
 import { useDispatch } from 'react-redux';
 import firebase from 'firebase';
@@ -20,9 +20,33 @@ function Card ({
     const [statePriority, setStatePriority] = useState(priority);
     const [stateIsDone, setStateIsDone] = useState(isDone);
 
-    console.log('priority =',priority)
-    console.log('isDone =',isDone)
+    const priorityCard = () => {
 
+        var isChecked = document.getElementsByName("priorityCard");
+        
+        for(var i = 0; i < isChecked.length; i++){
+            if(isChecked[i].checked == true) {
+                isChecked[i].parentNode.classList.add("priorityCard");
+            } else {
+                isChecked[i].parentNode.classList.remove("priorityCard");
+            }
+        }
+        
+    }
+
+    const cardIsDone = () => {
+
+        var isDone = document.getElementsByName("isDone");
+        
+        for(var i = 0; i < isDone.length; i++){
+            if(isDone[i].checked == true) {
+                isDone[i].parentNode.parentNode.classList.add("addIsDone");
+            } else {
+                isDone[i].parentNode.parentNode.classList.remove("addIsDone");
+            }
+        }
+        
+    }
 
     const getDataCard = id => {
         db.collection('userCards')
@@ -33,14 +57,14 @@ function Card ({
                 type: 'CARD',
                 email: email,
                 id: id,
-                isUpdate: true,
                 title: result.data().title,
                 subTitle: result.data().subTitle,
                 description: result.data().description,
                 day: result.data().day,
                 hour: result.data().hour,
                 priority: result.data().priority,
-                isDone: result.data().isDone
+                isDone: result.data().isDone,
+                isUpdate: true
             })
         })
         .catch(err => console.log(err));
@@ -66,11 +90,26 @@ function Card ({
         .catch(err => console.log('erro ao atualizar checkbox = ',err));
     }
 
+    useEffect(() => {
+        priorityCard();
+        cardIsDone();
+    },[]);
+
     return (
         <MainCards>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
-                <input onClick={() => updateCheckboxPriority(id) } type="checkbox" name="priorityCard" onChange={e => setStatePriority(e.target.value)} defaultChecked={ statePriority } className="form-switch checkboxHome" />
+                <input 
+                    onClick={() => updateCheckboxPriority(id) } 
+                    type="checkbox" 
+                    name="priorityCard" 
+                    onChange={e => {
+                        setStatePriority(e.target.value);
+                        priorityCard();
+                    }} 
+                    defaultChecked={ statePriority } 
+                    className="form-switch checkboxHome" 
+                />
             </div>
             <div className="card-body" id="mobileView">
                 <h5 className="card-title mb-3"><strong>{title}</strong></h5>
@@ -80,7 +119,18 @@ function Card ({
                     <small className="isDone"><strong>Data:</strong> {day} - {hour}</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>
-                        <input onClick={() => updateCheckboxIsDone(id) } type="checkbox" name="isDone" id="reminderDone" onChange={e => setStateIsDone(e.target.value)}  defaultChecked={ stateIsDone } className="checkboxHome" /> 
+                        <input 
+                            onClick={() => updateCheckboxIsDone(id) } 
+                            type="checkbox" 
+                            name="isDone" 
+                            id="reminderDone" 
+                            onChange={e => {
+                                setStateIsDone(e.target.value);
+                                cardIsDone();
+                            }}  
+                            defaultChecked={ stateIsDone } 
+                            className="checkboxHome" 
+                        /> 
                     </div>
                 </div>
                 <div className="card-footer">
