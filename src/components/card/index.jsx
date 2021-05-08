@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { MainCards } from './cardCss';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import firebase from 'firebase';
 
 function Card ({ 
@@ -16,57 +16,108 @@ function Card ({
 }) {
     const db = firebase.firestore();
     const dispatch = useDispatch();
-    
+
+    const partsOfDay = day.split("-");
+    const partsOfHour = hour.split(":");
+    const partsOfDateCard = new Date (
+        partsOfDay[0], 
+        partsOfDay[1], 
+        partsOfDay[2],
+        partsOfHour[0],
+        partsOfHour[1]
+    );
+
     const [statePriority, setStatePriority] = useState(priority);
     const [stateIsDone, setStateIsDone] = useState(isDone);
+    const [reminder, setReminder] = useState(0);
+
+    const dateFormated = day ? day.split('-').reverse().join('/') : '00/00/0000';
 
     const priorityCard = () => {
 
-        var isChecked = document.getElementsByName("priorityCard");
+        const isChecked = document.getElementsByName("priorityCard");
         
-        for(var i = 0; i < isChecked.length; i++){
-            if(isChecked[i].checked === true) {
-                isChecked[i].parentNode.classList.add("priorityCard");
+        isChecked.forEach(element => {
+            if(element.checked === true) {
+                element.parentNode.classList.add("priorityCard");
             } else {
-                isChecked[i].parentNode.classList.remove("priorityCard");
+                element.parentNode.classList.remove("priorityCard");
             }
-        }
-        
+        });
     }
 
-    const cardIsDone = () => {
+    const cardIsDone =  ()  => {
+          
+        const isDone = document.getElementsByName("isDone");
 
-        var isDone = document.getElementsByName("isDone");
-        
-        for(var i = 0; i < isDone.length; i++){
-            if(isDone[i].checked === true) {
-                isDone[i].parentNode.parentNode.classList.add("addIsDone");
-            } else {
-                isDone[i].parentNode.parentNode.classList.remove("addIsDone");
-            }
+        const fullDateNow = {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            day: new Date().getDate(),
+            hour: new Date().getHours(),
+            minute: new Date().getMinutes()
         }
-        
+        const partsOfDateNow = new Date(
+            fullDateNow.year,
+            fullDateNow.month,
+            fullDateNow.day,
+            fullDateNow.hour,
+            fullDateNow.minute
+        )
+
+        isDone.forEach( element => {
+            if ( partsOfDateCard.getTime() === partsOfDateNow.getTime() ) {
+                alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
+            }
+            else if ( partsOfDateCard.getTime() < partsOfDateNow.getTime() ) {
+                element.disabled = true;
+
+                if ( element.checked === true ) {
+                    element.parentNode.parentNode.classList.add("addIsDone");
+
+                }
+                else {
+                    element.parentNode.parentNode.classList.add("isLate");
+
+                }
+            } 
+            else if ( partsOfDateCard.getTime() > partsOfDateNow.getTime() ) {
+
+                element.disabled = false;
+
+                if ( element.checked === true ) {
+                    element.parentNode.parentNode.classList.add("addIsDone");
+                }
+                else {
+                    element.parentNode.parentNode.classList.remove("isLate");
+                    element.parentNode.parentNode.classList.remove("addIsDone");
+                }
+
+            }
+        });
     }
 
-    const getDataCard = id => {
-        db.collection('userCards')
+    const getDataCard = async (id, action) => {
+        await db.collection('userCards')
         .doc(id)
         .get()
-        .then(result => {
+        .then(() => {
             console.log('card encontrado!');
-            dispatch({
-                type: 'CARD',
-                email: email,
-                id: id,
-                title: result.data().title,
-                subTitle: result.data().subTitle,
-                description: result.data().description,
-                day: result.data().day,
-                hour: result.data().hour,
-                priority: result.data().priority,
-                isDone: result.data().isDone,
-                isUpdate: true
-            })
+            if(action === 'update') {
+                dispatch({
+                    type: 'CARD_UPDATE',
+                    email: email,
+                    id: id
+                });
+            } else if(action === 'delete') {
+                dispatch({
+                    type: 'CARD_DELETE',
+                    email: email,
+                    id: id
+                });
+            } else {
+                console.log('action de card desconhecida.');
+            }
         })
         .catch(err => console.log(err));
     }
@@ -94,19 +145,49 @@ function Card ({
     useEffect(() => {
         setStatePriority(priority);
         setStateIsDone(isDone);
-    }, [priority, isDone]);
+    }, [ priority, isDone ]);
 
     useEffect(() => {
         priorityCard();
         cardIsDone();
-    }, [statePriority, stateIsDone]);
+    }, [ statePriority, stateIsDone ]);
+
+    useEffect(() => {
+        cardIsDone();
+        const fullDateNow = {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            day: new Date().getDate(),
+            hour: new Date().getHours(),
+            minute: new Date().getMinutes()
+        }
+        const partsOfDateNow = new Date(
+            fullDateNow.year,
+            fullDateNow.month,
+            fullDateNow.day,
+            fullDateNow.hour,
+            fullDateNow.minute
+        )
+
+        const differenceBetweenDates = partsOfDateCard.getTime() - partsOfDateNow.getTime();
+
+        setTimeout(() => {
+            if ( differenceBetweenDates === 0 ) {
+                alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
+            }
+            else if ( differenceBetweenDates > 0 ) {
+                cardIsDone();
+            }
+        }, differenceBetweenDates );
+
+    }, [ day, hour ]);
 
     return (
         <MainCards>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
                 <input 
-                    onClick={() => updateCheckboxPriority(id) } 
+                    onClick={ () => updateCheckboxPriority(id) } 
                     type="checkbox" 
                     name="priorityCard" 
                     onChange={e => {
@@ -118,11 +199,11 @@ function Card ({
                 />
             </div>
             <div className="card-body" id="mobileView">
-                <h5 className="card-title mb-3"><strong>{title}</strong></h5>
-                <h6 className="card-subtitle mb-3 text-muted">{subTitle}</h6>
-                <p className="card-text">{description}</p>
+                <h5 className="card-title mb-3"><strong>{ title }</strong></h5>
+                <h6 className="card-subtitle mb-3 text-muted">{ subTitle }</h6>
+                <p className="card-text">{ description }</p>
                 <div className="d-flex justify-content-between mb-3" id="containerDateDone1">
-                    <small className="isDone"><strong>Data:</strong> {day} - {hour}</small>
+                    <small className="isDone"><strong>Data:</strong> { dateFormated } - { hour }</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>
                         <input 
@@ -130,9 +211,9 @@ function Card ({
                             type="checkbox" 
                             name="isDone" 
                             id="reminderDone" 
-                            onChange={e => {
+                            onChange={ e => {
                                 setStateIsDone(e.target.checked);
-                                cardIsDone();
+                                cardIsDone( partsOfDateCard );
                             }}  
                             checked={ stateIsDone } 
                             className="checkboxHome" 
@@ -141,8 +222,24 @@ function Card ({
                 </div>
                 <div className="card-footer">
                     <div className="d-flex justify-content-between">
-                        <button type="button" className="btn btn-danger btn-sm">Excluir</button>
-                        <button onClick={ () => { getDataCard(id) } } data-toggle="modal" data-target="#editModal" type="button" className="btn btn-primary btn-sm">Editar</button>
+                        <button 
+                            onClick={ () => { getDataCard(id, "delete") } } 
+                            data-toggle="modal" 
+                            data-target="#deleteModal" 
+                            type="button" 
+                            className="btn btn-danger btn-sm"
+                        >
+                            Excluir
+                        </button>
+                        <button 
+                            onClick={ () => { getDataCard(id, "update") } } 
+                            data-toggle="modal" 
+                            data-target="#editModal" 
+                            type="button" 
+                            className="btn btn-primary btn-sm"
+                        >
+                            Editar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,4 +247,4 @@ function Card ({
     );
 }
 
-export default Card;
+export default memo(Card);

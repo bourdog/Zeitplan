@@ -4,10 +4,9 @@ import { Link } from 'react-router-dom';
 import firebase from '../../../config/firebase';
 
 
-function NavbarSignIn (props) {
+function NavbarSignIn ({ tab }) {
 
-    const emailUser = useSelector(state => state.user.email);
-    const [nameUser, setNameUser] = useState('Usuário'); 
+    const nameUser = useSelector(state => state.user.name)
     const dispatch = useDispatch();
     const db = firebase.firestore();
 
@@ -30,29 +29,16 @@ function NavbarSignIn (props) {
     }
 
     useEffect (() => {
-        const getNameFromUser = () => {
-            db.collection("userProfile").where("email", "==", emailUser)
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(doc => {
-                    setNameUser(doc.data().name);
-                });
-            }).catch(err => console.log(err))
-        }
-        getNameFromUser();
-    },[]);
-
-    useEffect (() => {
         const tabs = document.getElementsByClassName('nav-item');
         for (var i = 0; i < tabs.length; i++){
             tabs[i].classList.remove('active');
-            if(props.tab === 'home') {
+            if(tab === 'home') {
                 tabs[0].classList.add('active');
-            } else if(tabs[i].innerText === props.tab) {
+            } else if(tabs[i].innerText === tab) {
                 tabs[i].classList.add('active');
             }
         }
-    }, [props.tab]);
+    }, [tab]);
 
     return (
         <header>

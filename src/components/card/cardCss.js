@@ -21,6 +21,11 @@ export const MainCards = styled.div `
         transition: all .4s;
     }
 
+    .isLate {
+        border-bottom: 3px solid red;
+        text-decoration: line-through;
+    }
+
     p {
         font-size: 12px;
     }

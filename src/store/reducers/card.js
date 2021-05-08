@@ -1,36 +1,36 @@
 const INITIAL_STATE = {
     id: "",
     email: "",
-    title: "",
-    subTitle: "",
-    description: "",
-    day: "",
-    hour: "",
-    priority: false,
-    isDone: false,
+    isDelete: false,
     isUpdate: false
 };
 
 function cardReducer (state = INITIAL_STATE, action) {
     switch (action.type) {
-        case 'CARD':
+        case 'CARD_UPDATE':
             return {
                 ...state,
                 id: action.id,
                 email: action.email,
-                isUpdate: action.isUpdate,
-                title: action.title,
-                subTitle: action.subTitle,
-                description: action.description,
-                day: action.day,
-                hour: action.hour,
-                priority: action.priority,
-                isDone: action.isDone
+                isDelete: false,
+                isUpdate: true
             }
         case 'CARD_UPDATED':
             return {
                 ...state,
                 isUpdate: false
+            }
+        case 'CARD_DELETE':
+                return {
+                    ...state,
+                    id: action.id,
+                    email: action.email,
+                    isDelete: true,
+                }
+        case 'CARD_DELETED':
+            return {
+                ...state,
+                isDelete: false
             }
         default:    
             return state;

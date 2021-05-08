@@ -4,6 +4,7 @@ import Card from '../../components/card';
 import { BodyMain, Reminders, MainContainerContents } from './homeCss';
 import firebase from 'firebase';
 import { useDispatch, useSelector } from 'react-redux'
+
  
 function Home () {
 
@@ -28,8 +29,9 @@ function Home () {
     const dispatch = useDispatch();
 
     const emailUser = useSelector(state => state.user.email);
-    const idCardEdit = useSelector(state => state.card.id);
+    const idCard = useSelector(state => state.card.id);
     const isUpdating = useSelector(state => state.card.isUpdate);
+    const isDeleting = useSelector(state => state.card.isDelete);
 
     var ArrayOfCards = [];
 
@@ -43,22 +45,22 @@ function Home () {
     }
 
     const controlDateField = () => {
-        var inputDate = document.getElementsByName("dateCreateCard")[0];
-        var dateToday = new Date();
+        const inputDate = document.getElementsByName("dateCreateCard")[0];
+        const dateToday = new Date();
     
-        var day = dateToday.getDate();
-        var month = dateToday.getMonth() + 1;
-        var year = dateToday.getFullYear();
+        const day = dateToday.getDate();
+        const month = dateToday.getMonth() + 1;
+        const year = dateToday.getFullYear();
     
-        var dateCompletedMin = `${year}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
-        var dateCompletedMax = `${year + 5}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
+        const dateCompletedMin = `${year}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
+        const dateCompletedMax = `${year + 5}-${("00" + month).slice(-2)}-${("00" + day).slice(-2)}`;
     
         inputDate.min = dateCompletedMin;
         inputDate.max = dateCompletedMax;
     }
     
     const clearInputModal = () => {
-        var clear = document.getElementsByClassName("clear");
+        const clear = document.getElementsByClassName("clear");
     
         for(var i = 0; i < clear.length; i++) {
             clear[i].value = "";
@@ -70,10 +72,10 @@ function Home () {
         callback();
     };
 
-    const createCard = () => {
+    const createCard = async () => {
         setLoading(true);
 
-        db.collection('userCards')
+        await db.collection('userCards')
         .add({
             email: emailUser,
             title: createTitle,
@@ -94,8 +96,8 @@ function Home () {
         });
     }
 
-    const updateCard = id => {
-        db.collection('userCards')
+    const updateCard = async id => {
+        await db.collection('userCards')
         .doc(id)
         .update({
             title: editTitle,
@@ -107,18 +109,7 @@ function Home () {
         })
         .then(() => {
             console.log('Card atualizado.');
-            dispatch({
-                type: 'CARD',
-                email: emailUser,
-                id: id,
-                title: editTitle,
-                subTitle: editSubTitle,
-                description: editDescription,
-                day: editDay,
-                hour: editHour,
-                priority: editPriority,
-                isUpdate: false
-            });
+            dispatch({ type: 'CARD_UPDATED' });
             setLoading(true);
         })
         .catch(err => {
@@ -126,6 +117,32 @@ function Home () {
             setLoading(true);
         });
         setLoading(false);
+    }
+
+    const deleteCard = async id => {
+        await db.collection('userCards')
+        .doc(id)
+        .delete()
+        .then(() => {
+            console.log('card excluido.');
+            dispatch({ type: 'CARD_DELETED' });
+        })
+        .catch(err => console.log('erro ao excluir card.', err));
+    }
+
+    const setEditModalFields = async id => {
+        await db.collection('userCards')
+        .doc(id)
+        .get()
+        .then(result => {
+            setEditTitle(result.data().title);
+            setEditSubTitle(result.data().subTitle);
+            setEditDescription(result.data().description);
+            setEditDay(result.data().day);
+            setEditHour(result.data().hour);
+            setEditPriority(result.data().priority);                    
+        })
+        .catch(err => console.log('erro: ', err));
     }
 
     useEffect(() => { 
@@ -146,26 +163,16 @@ function Home () {
             }
         }
         getUserCards();    
-    }, [loading]);
+    }, [loading, isDeleting]);
 
     useEffect(() => {
         if(isUpdating) {
             setLoading(true);
-            if(idCardEdit) {
-                db.collection('userCards')
-                .doc(idCardEdit)
-                .get()
-                .then(result => {
-                    setEditTitle(result.data().title);
-                    setEditSubTitle(result.data().subTitle);
-                    setEditDescription(result.data().description);
-                    setEditDay(result.data().day);
-                    setEditHour(result.data().hour);
-                    setEditPriority(result.data().priority);
-                    setLoading(false);
-                })
-                .catch(err => console.log('erro: ', err));
+            if(idCard) {
+                setEditModalFields(idCard);
             }
+            setLoading(false);
+            dispatch({ type: 'CARD_UPDATED' });
         }
     }, [isUpdating]);
 
@@ -246,7 +253,7 @@ function Home () {
                         </div>
                         <div className="modal-footer">
                             { loading === true ? (
-                                <div className="d-flex justify-content-center my-4">
+                                <div className="d-flex my-3 mx-5">
                                     <div className="spinner-border" role="status">
                                         <span className="sr-only">Loading...</span>
                                     </div>
@@ -293,7 +300,7 @@ function Home () {
                                     <p><strong>Hora:</strong></p>
                                     <input onChange={ e => setEditHour(e.target.value)} className="form-control mb-2 clear" type="time" value={ editHour ? editHour : "" } required />
                                     <div className="d-flex form-check align-items-center mb-2 clear">
-                                        <input onChange={ e => setEditPriority(e.target.checked)} className="form-check-input" type="checkbox" id="editCheckbox2" checked={ editPriority } />
+                                        <input onChange={ e => setEditPriority(e.target.checked)} className="form-check-input" type="checkbox" id="editCheckbox2" checked={ editPriority ? editPriority : false } />
                                         <label className="form-check-label mt-2" htmlFor="editCheckbox2">
                                             <strong>Prioritario</strong>      
                                         </label>
@@ -303,7 +310,7 @@ function Home () {
                         </div>
                         <div className="modal-footer">
                             { loading === true ? (
-                                <div className="d-flex justify-content-center my-4">
+                                <div className="d-flex my-3 mx-5">
                                     <div className="spinner-border" role="status">
                                         <span className="sr-only">Loading...</span>
                                     </div>
@@ -316,7 +323,7 @@ function Home () {
                                     <button type="button" className="btn btn-danger" onClick={clearInputModal}>
                                         <i className="bi bi-eraser-fill buttonNotItalic"> Limpar</i>
                                     </button>
-                                    <button onClick={ () => { updateCard(idCardEdit) } } type="submit" className="btn btn-success" data-dismiss="modal">
+                                    <button onClick={ () => { updateCard(idCard) } } type="submit" className="btn btn-success" data-dismiss="modal">
                                         <i className="bi bi-check-circle buttonNotItalic"> Editar</i>
                                     </button>
                                 </>
@@ -326,6 +333,43 @@ function Home () {
                 </div>
             </div>
             {/*<!-- /ModalEdit -->*/}
+            {/*<!-- ModalDeleteConfirm -->*/}
+            <div className="modal fade" id="deleteModal" tabIndex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div className="modal-dialog" role="document">
+                    <div className="modal-content">
+                        <div className="modal-header headerModal">
+                            <h5 className="modal-title h1 modalLabel" id="deleteModalLabel">Excluir lembrete</h5>
+                            <button type="button" className="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true" className="closerButton">&times;</span>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="container d-flex justify-content-center">
+                                <p>Tem certeza que deseja <strong>excluir</strong>?</p>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            { loading === true ? (
+                                <div className="d-flex my-3 mx-5">
+                                    <div className="spinner-border" role="status">
+                                        <span className="sr-only">Loading...</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    <button type="button" className="btn btn-secondary" data-dismiss="modal">
+                                        <i className="bi bi-x-circle buttonNotItalic"> Cancelar</i>            
+                                    </button>
+                                    <button onClick={ () => { deleteCard(idCard) } } type="submit" className="btn btn-danger" data-dismiss="modal">
+                                        <i className="bi bi-check-circle buttonNotItalic"> Excluir</i>
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/*<!-- /ModalDeleteConfirm -->*/}
         </BodyMain>
     );
 }

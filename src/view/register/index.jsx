@@ -54,16 +54,18 @@ function Register () {
         inputDate.max = dateCompletedMax;
     }
 
-    const userRegister = () => {
+    const userRegister = async () => {
 
         setLoading(true);
         setTypeError(null);
 
-        firebase.auth().createUserWithEmailAndPassword(
+        await firebase.auth().createUserWithEmailAndPassword(
             email,
             password
-        ).then(result => {
-            db.collection('userProfile').add({
+        )
+        .then(async result => {
+            await db.collection('userProfile')
+            .add({
                 id: result.user.uid,
                 name: name,
                 lastName: lastName,
@@ -73,7 +75,8 @@ function Register () {
             }).then(() => {
                 setIsRegistered(true);
                 setLoading(false);
-            }).catch( err => {
+            }).catch(err => {
+                console.log('erro ao cadastrar usuário.', err);
                 setLoading(false);
             });
             setTimeout(()=>{
@@ -85,7 +88,7 @@ function Register () {
                     email: email
                 })
             }, 1500)
-        }).catch( err => {
+        }).catch(err => {
             setLoading(false);
             console.log(err);
             switch(err.message) {
