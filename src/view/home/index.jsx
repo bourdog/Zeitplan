@@ -73,50 +73,62 @@ function Home () {
     };
 
     const createCard = async () => {
-        setLoading(true);
 
-        await db.collection('userCards')
-        .add({
-            email: emailUser,
-            title: createTitle,
-            subTitle: createSubTitle,
-            description: createDescription,
-            day: createDay,
-            hour: createHour,
-            priority: createPriority,
-            isDone: false,
-            create: new Date()
-        }).then(() => {
-            console.log('Card criado.');
-            setLoading(false);
-            clearInputModal();
-        }).catch( err => {
-            setLoading(false);
-            console.log('Erro ao criar card.', err);
-        });
+        if ( !createTitle || !createSubTitle || !createDescription || !createDay || !createHour ) {
+            alert( 'Preencha todos os campos!' );
+        }
+        else {
+            setLoading(true);
+
+            await db.collection('userCards')
+            .add({
+                email: emailUser,
+                title: createTitle,
+                subTitle: createSubTitle,
+                description: createDescription,
+                day: createDay,
+                hour: createHour,
+                priority: createPriority,
+                isDone: false,
+                isLate: false,
+                create: new Date()
+            }).then(() => {
+                console.log('Card criado.');
+                setLoading(false);
+                clearInputModal();
+            }).catch( err => {
+                setLoading(false);
+                console.log('Erro ao criar card.', err);
+            });
+        }
     }
 
     const updateCard = async id => {
-        await db.collection('userCards')
-        .doc(id)
-        .update({
-            title: editTitle,
-            subTitle: editSubTitle,
-            description: editDescription,
-            day: editDay,
-            hour: editHour,
-            priority: editPriority
-        })
-        .then(() => {
-            console.log('Card atualizado.');
-            dispatch({ type: 'CARD_UPDATED' });
-            setLoading(true);
-        })
-        .catch(err => {
-            console.log('erro ao editar card.', err);
-            setLoading(true);
-        });
-        setLoading(false);
+        if ( !editTitle || !editSubTitle || !editDescription || !editDay || !editHour ) {
+            alert( 'Preencha todos os campos!' );
+        }
+        else {
+            await db.collection('userCards')
+            .doc(id)
+            .update({
+                title: editTitle,
+                subTitle: editSubTitle,
+                description: editDescription,
+                day: editDay,
+                hour: editHour,
+                priority: editPriority
+            })
+            .then(() => {
+                console.log('Card atualizado.');
+                dispatch({ type: 'CARD_UPDATED' });
+                setLoading(true);
+            })
+            .catch(err => {
+                console.log('erro ao editar card.', err);
+                setLoading(true);
+            });
+            setLoading(false);
+        }
     }
 
     const deleteCard = async id => {
@@ -204,16 +216,17 @@ function Home () {
                 { cards && cards.map((element, index) => {
                     return (
                         <Card 
-                            email={emailUser}
-                            title={element.title} 
-                            subTitle={element.subTitle}
-                            description={element.description}
-                            day={element.day}
-                            hour={element.hour}
-                            priority={element.priority}
-                            isDone={element.isDone}
-                            id={element.id}
-                            key={index}
+                            email={ emailUser }
+                            title={ element.title } 
+                            subTitle={ element.subTitle }
+                            description={ element.description }
+                            day={ element.day }
+                            hour={ element.hour }
+                            priority={ element.priority }
+                            isDone={ element.isDone }
+                            isLate={ element.isLate }
+                            id={ element.id }
+                            key={ index }
                         />
                     )
                 })}

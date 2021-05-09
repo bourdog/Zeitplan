@@ -12,6 +12,7 @@ function Card ({
     hour,
     priority,
     isDone,
+    isLate,
     id
 }) {
     const db = firebase.firestore();
@@ -24,12 +25,15 @@ function Card ({
         partsOfDay[1], 
         partsOfDay[2],
         partsOfHour[0],
-        partsOfHour[1]
+        partsOfHour[1],
+        new Date().getSeconds()
     );
 
     const [statePriority, setStatePriority] = useState(priority);
     const [stateIsDone, setStateIsDone] = useState(isDone);
-    const [reminder, setReminder] = useState(0);
+    const [stateIsDisabled, setStateIsDisabled] = useState(false);
+    const [borderCard, setBorderCard] = useState('none');
+    const [isLate, setIsLate] = useState('none');
 
     const dateFormated = day ? day.split('-').reverse().join('/') : '00/00/0000';
 
@@ -46,55 +50,50 @@ function Card ({
         });
     }
 
-    const cardIsDone =  ()  => {
+    const cardIsDone =  async ()  => {
           
-        const isDone = document.getElementsByName("isDone");
-
         const fullDateNow = {
             year: new Date().getFullYear(),
             month: new Date().getMonth() + 1,
             day: new Date().getDate(),
             hour: new Date().getHours(),
-            minute: new Date().getMinutes()
+            minute: new Date().getMinutes(),
+            second: new Date().getSeconds()
         }
         const partsOfDateNow = new Date(
             fullDateNow.year,
             fullDateNow.month,
             fullDateNow.day,
             fullDateNow.hour,
-            fullDateNow.minute
+            fullDateNow.minute,
+            fullDateNow.second
         )
 
-        isDone.forEach( element => {
-            if ( partsOfDateCard.getTime() === partsOfDateNow.getTime() ) {
-                alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
+        if ( partsOfDateCard.getTime() === partsOfDateNow.getTime() ) {
+            alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
+        }
+        else if ( partsOfDateCard.getTime() < partsOfDateNow.getTime() ) {
+            setStateIsDisabled( true );
+            setIsLate( 'line-through' );
+            if ( stateIsDone === true ) {
+                setBorderCard( '3px solid rgb(0, 255, 0)' );
+                await db.collection('userCards')
+                .doc( id )
             }
-            else if ( partsOfDateCard.getTime() < partsOfDateNow.getTime() ) {
-                element.disabled = true;
-
-                if ( element.checked === true ) {
-                    element.parentNode.parentNode.classList.add("addIsDone");
-
-                }
-                else {
-                    element.parentNode.parentNode.classList.add("isLate");
-
-                }
-            } 
-            else if ( partsOfDateCard.getTime() > partsOfDateNow.getTime() ) {
-
-                element.disabled = false;
-
-                if ( element.checked === true ) {
-                    element.parentNode.parentNode.classList.add("addIsDone");
-                }
-                else {
-                    element.parentNode.parentNode.classList.remove("isLate");
-                    element.parentNode.parentNode.classList.remove("addIsDone");
-                }
-
+            else {
+                setBorderCard( '3px solid rgb(255, 0, 0)' );
             }
-        });
+        } 
+        else if ( partsOfDateCard.getTime() > partsOfDateNow.getTime() ) {
+            setStateIsDisabled( false );
+            setIsLate( 'none' );
+            if ( stateIsDone === true ) {
+                setBorderCard( '3px solid rgb(0, 255, 0)' );
+            }
+            else {
+                setBorderCard( 'none' );
+            }
+        }
     }
 
     const getDataCard = async (id, action) => {
@@ -122,8 +121,8 @@ function Card ({
         .catch(err => console.log(err));
     }
 
-    const updateCheckboxPriority = id => {
-        db.collection('userCards')
+    const updateCheckboxPriority = async id => {
+        await db.collection('userCards')
         .doc(id)
         .update({
             priority: statePriority ? false : true
@@ -132,8 +131,8 @@ function Card ({
         .catch(err => console.log('erro ao atualizar checkbox = ',err));
     }
 
-    const updateCheckboxIsDone = id => {
-        db.collection('userCards')
+    const updateCheckboxIsDone = async id => {
+        await db.collection('userCards')
         .doc(id)
         .update({
             isDone: stateIsDone ? false : true
@@ -154,28 +153,28 @@ function Card ({
 
     useEffect(() => {
         cardIsDone();
+
         const fullDateNow = {
             year: new Date().getFullYear(),
             month: new Date().getMonth() + 1,
             day: new Date().getDate(),
             hour: new Date().getHours(),
-            minute: new Date().getMinutes()
+            minute: new Date().getMinutes(),
+            second: new Date().getSeconds()
         }
         const partsOfDateNow = new Date(
             fullDateNow.year,
             fullDateNow.month,
             fullDateNow.day,
             fullDateNow.hour,
-            fullDateNow.minute
+            fullDateNow.minute,
+            fullDateNow.second
         )
 
         const differenceBetweenDates = partsOfDateCard.getTime() - partsOfDateNow.getTime();
 
         setTimeout(() => {
-            if ( differenceBetweenDates === 0 ) {
-                alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
-            }
-            else if ( differenceBetweenDates > 0 ) {
+            if ( differenceBetweenDates >= 0 ) {
                 cardIsDone();
             }
         }, differenceBetweenDates );
@@ -183,7 +182,7 @@ function Card ({
     }, [ day, hour ]);
 
     return (
-        <MainCards>
+        <MainCards style={{ border: borderCard ? borderCard : 'none' }}>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
                 <input 
@@ -202,7 +201,7 @@ function Card ({
                 <h5 className="card-title mb-3"><strong>{ title }</strong></h5>
                 <h6 className="card-subtitle mb-3 text-muted">{ subTitle }</h6>
                 <p className="card-text">{ description }</p>
-                <div className="d-flex justify-content-between mb-3" id="containerDateDone1">
+                <div className="d-flex justify-content-between mb-3" id="containerDateDone1" style={{ textDecoration: isLate ? isLate : 'none' }} >
                     <small className="isDone"><strong>Data:</strong> { dateFormated } - { hour }</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>
@@ -216,6 +215,7 @@ function Card ({
                                 cardIsDone( partsOfDateCard );
                             }}  
                             checked={ stateIsDone } 
+                            disabled={ stateIsDisabled }
                             className="checkboxHome" 
                         /> 
                     </div>

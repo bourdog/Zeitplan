@@ -7,6 +7,7 @@ export const MainCards = styled.div `
     background-color: #afafaf80 !important;
     position: relative;
     box-shadow: 3px 10px 10px -1px rgba(0,0,0,0.75);
+    transition: all .4s;
 
     .priorityCard {
         color: white;
