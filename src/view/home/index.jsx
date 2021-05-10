@@ -33,7 +33,7 @@ function Home () {
     const isUpdating = useSelector(state => state.card.isUpdate);
     const isDeleting = useSelector(state => state.card.isDelete);
 
-    var ArrayOfCards = [];
+    const arrayOfCards = [];
 
 
     const searchDate = (textDate) => {
@@ -165,12 +165,12 @@ function Home () {
                 .get()
                 .then(querySnapshot => {
                     querySnapshot.forEach(doc => {
-                        ArrayOfCards.push({
+                        arrayOfCards.push({
                             id: doc.id,
                             ...doc.data()
                         });
                     });
-                    setCards(ArrayOfCards);
+                    setCards(arrayOfCards);
                 }).catch(err => console.log(err));
             }
         }

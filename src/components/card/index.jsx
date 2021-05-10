@@ -32,8 +32,8 @@ function Card ({
     const [statePriority, setStatePriority] = useState(priority);
     const [stateIsDone, setStateIsDone] = useState(isDone);
     const [stateIsDisabled, setStateIsDisabled] = useState(false);
-    const [borderCard, setBorderCard] = useState('none');
-    const [isLate, setIsLate] = useState('none');
+    const [borderCard, setBorderCard] = useState('3px solid #007bff');
+    const [stateIsLate, setStateIsLate] = useState('none');
 
     const dateFormated = day ? day.split('-').reverse().join('/') : '00/00/0000';
 
@@ -74,24 +74,35 @@ function Card ({
         }
         else if ( partsOfDateCard.getTime() < partsOfDateNow.getTime() ) {
             setStateIsDisabled( true );
-            setIsLate( 'line-through' );
+            setStateIsLate( 'line-through' );
             if ( stateIsDone === true ) {
                 setBorderCard( '3px solid rgb(0, 255, 0)' );
-                await db.collection('userCards')
-                .doc( id )
             }
             else {
                 setBorderCard( '3px solid rgb(255, 0, 0)' );
+                await db.collection('userCards')
+                .doc( id )
+                .update({
+                    isLate: true
+                })
+                .then(() => console.log( 'isLate atualizado.' ) )
+                .catch( err => console.log( 'erro ao atualizar atributo `isLate`.', err ) );
             }
         } 
         else if ( partsOfDateCard.getTime() > partsOfDateNow.getTime() ) {
             setStateIsDisabled( false );
-            setIsLate( 'none' );
+            setStateIsLate( 'none' );
             if ( stateIsDone === true ) {
                 setBorderCard( '3px solid rgb(0, 255, 0)' );
             }
             else {
-                setBorderCard( 'none' );
+                setBorderCard( '3px solid #007bff' );await db.collection('userCards')
+                .doc( id )
+                .update({
+                    isLate: false
+                })
+                .then(() => console.log( 'isLate atualizado.' ) )
+                .catch( err => console.log( 'erro ao atualizar atributo `isLate`.', err ) );
             }
         }
     }
@@ -135,7 +146,8 @@ function Card ({
         await db.collection('userCards')
         .doc(id)
         .update({
-            isDone: stateIsDone ? false : true
+            isDone: stateIsDone ? false : true,
+            isLate: stateIsDone ? true : false
         })
         .then(() => console.log('atualizou o isDone'))
         .catch(err => console.log('erro ao atualizar checkbox = ',err));
@@ -173,22 +185,25 @@ function Card ({
 
         const differenceBetweenDates = partsOfDateCard.getTime() - partsOfDateNow.getTime();
 
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             if ( differenceBetweenDates >= 0 ) {
                 cardIsDone();
             }
         }, differenceBetweenDates );
 
+        return () => clearTimeout( timer );
+
     }, [ day, hour ]);
 
     return (
-        <MainCards style={{ border: borderCard ? borderCard : 'none' }}>
+        <MainCards style={{ border: borderCard ? borderCard : '3px solid #007bff' }}>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
                 <input 
                     onClick={ () => updateCheckboxPriority(id) } 
                     type="checkbox" 
-                    name="priorityCard" 
+                    name="priorityCard"
+                    id="priorityCard" 
                     onChange={e => {
                         setStatePriority(e.target.checked);
                         priorityCard();
@@ -201,7 +216,7 @@ function Card ({
                 <h5 className="card-title mb-3"><strong>{ title }</strong></h5>
                 <h6 className="card-subtitle mb-3 text-muted">{ subTitle }</h6>
                 <p className="card-text">{ description }</p>
-                <div className="d-flex justify-content-between mb-3" id="containerDateDone1" style={{ textDecoration: isLate ? isLate : 'none' }} >
+                <div className="d-flex justify-content-between mb-3" id="containerDateDone1" style={{ textDecoration: stateIsLate ? stateIsLate : 'none' }} >
                     <small className="isDone"><strong>Data:</strong> { dateFormated } - { hour }</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>

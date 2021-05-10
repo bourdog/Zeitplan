@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 
 export const MainCards = styled.div `
+    border: 3px solid #007bff;
+    border-radius: 10px;
     width: 16rem;
     height: auto;
     margin: 1rem;
@@ -11,20 +13,8 @@ export const MainCards = styled.div `
 
     .priorityCard {
         color: white;
-        background-image: linear-gradient(
-            to bottom, red, rgb(170, 0, 0)
-        ) !important;
+        background-color: #dc3545 !important;
         transition: all .4s;
-    }
-
-    .addIsDone {
-        border-bottom: 3px solid rgb(0, 255, 0);
-        transition: all .4s;
-    }
-
-    .isLate {
-        border-bottom: 3px solid red;
-        text-decoration: line-through;
     }
 
     p {
