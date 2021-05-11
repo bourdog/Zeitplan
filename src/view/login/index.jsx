@@ -19,25 +19,38 @@ function Login () {
     const [loading, setLoading] = useState(false);
 
     const dispatch = useDispatch();
+    const db = firebase.firestore();
 
-    function authenticated () {
+    const authenticated = async () => {
         
         setLoading(true);
 
-        firebase.auth().signInWithEmailAndPassword(
+        await firebase.auth().signInWithEmailAndPassword(
             email,
             password
-        ).then(() => {
+        )
+        .then( async result => {
+            console.log( result )
             setIsAuth(true);
             setLoading(false);
-            dispatch({
-                type: 'LOGIN',
-                email: email
-            })
-        }).catch( err => {
+            
+            await db.collection("userProfile")
+            .where("email", "==", email)
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    dispatch({
+                        type: 'LOGIN',
+                        email: email,
+                        name: doc.data().name
+                    });
+                });
+            }).catch(err => console.log(err))
+        })
+        .catch(err => {
             setIsAuth(false);
             setLoading(false);
-            console.log(err);
+            console.log('erro ao autenticar usuário.', err);
         });
     }
 

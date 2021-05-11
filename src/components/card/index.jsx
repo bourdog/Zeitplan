@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import { MainCards } from './cardCss';
 import { useDispatch } from 'react-redux';
 import firebase from 'firebase';
@@ -12,42 +12,128 @@ function Card ({
     hour,
     priority,
     isDone,
+    isLate,
     id
 }) {
     const db = firebase.firestore();
     const dispatch = useDispatch();
-    
+
+    const partsOfDay = day.split("-");
+    const partsOfHour = hour.split(":");
+    const partsOfDateCard = new Date (
+        partsOfDay[0], 
+        partsOfDay[1], 
+        partsOfDay[2],
+        partsOfHour[0],
+        partsOfHour[1],
+        new Date().getSeconds()
+    );
+
     const [statePriority, setStatePriority] = useState(priority);
     const [stateIsDone, setStateIsDone] = useState(isDone);
+    const [stateIsDisabled, setStateIsDisabled] = useState(false);
+    const [borderCard, setBorderCard] = useState('3px solid #007bff');
+    const [stateIsLate, setStateIsLate] = useState('none');
 
-    console.log('priority =',priority)
-    console.log('isDone =',isDone)
+    const dateFormated = day ? day.split('-').reverse().join('/') : '00/00/0000';
 
+    const priorityCard = () => {
 
-    const getDataCard = id => {
-        db.collection('userCards')
+        const isChecked = document.getElementsByName("priorityCard");
+        
+        isChecked.forEach(element => {
+            if(element.checked === true) {
+                element.parentNode.classList.add("priorityCard");
+            } else {
+                element.parentNode.classList.remove("priorityCard");
+            }
+        });
+    }
+
+    const cardIsDone =  async ()  => {
+          
+        const fullDateNow = {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            day: new Date().getDate(),
+            hour: new Date().getHours(),
+            minute: new Date().getMinutes(),
+            second: new Date().getSeconds()
+        }
+        const partsOfDateNow = new Date(
+            fullDateNow.year,
+            fullDateNow.month,
+            fullDateNow.day,
+            fullDateNow.hour,
+            fullDateNow.minute,
+            fullDateNow.second
+        )
+
+        if ( partsOfDateCard.getTime() === partsOfDateNow.getTime() ) {
+            alert( `- Lembrete para agora: \n\n${ title }\n ${ subTitle }\n ${ description }` );
+        }
+        else if ( partsOfDateCard.getTime() < partsOfDateNow.getTime() ) {
+            setStateIsDisabled( true );
+            setStateIsLate( 'line-through' );
+            if ( stateIsDone === true ) {
+                setBorderCard( '3px solid rgb(0, 255, 0)' );
+            }
+            else {
+                setBorderCard( '3px solid rgb(255, 0, 0)' );
+                await db.collection('userCards')
+                .doc( id )
+                .update({
+                    isLate: true
+                })
+                .then(() => console.log( 'isLate atualizado.' ) )
+                .catch( err => console.log( 'erro ao atualizar atributo `isLate`.', err ) );
+            }
+        } 
+        else if ( partsOfDateCard.getTime() > partsOfDateNow.getTime() ) {
+            setStateIsDisabled( false );
+            setStateIsLate( 'none' );
+            if ( stateIsDone === true ) {
+                setBorderCard( '3px solid rgb(0, 255, 0)' );
+            }
+            else {
+                setBorderCard( '3px solid #007bff' );await db.collection('userCards')
+                .doc( id )
+                .update({
+                    isLate: false
+                })
+                .then(() => console.log( 'isLate atualizado.' ) )
+                .catch( err => console.log( 'erro ao atualizar atributo `isLate`.', err ) );
+            }
+        }
+    }
+
+    const getDataCard = async (id, action) => {
+        await db.collection('userCards')
         .doc(id)
         .get()
-        .then(result => {
-            dispatch({
-                type: 'CARD',
-                email: email,
-                id: id,
-                isUpdate: true,
-                title: result.data().title,
-                subTitle: result.data().subTitle,
-                description: result.data().description,
-                day: result.data().day,
-                hour: result.data().hour,
-                priority: result.data().priority,
-                isDone: result.data().isDone
-            })
+        .then(() => {
+            console.log('card encontrado!');
+            if(action === 'update') {
+                dispatch({
+                    type: 'CARD_UPDATE',
+                    email: email,
+                    id: id
+                });
+            } else if(action === 'delete') {
+                dispatch({
+                    type: 'CARD_DELETE',
+                    email: email,
+                    id: id
+                });
+            } else {
+                console.log('action de card desconhecida.');
+            }
         })
         .catch(err => console.log(err));
     }
 
-    const updateCheckboxPriority = id => {
-        db.collection('userCards')
+    const updateCheckboxPriority = async id => {
+        await db.collection('userCards')
         .doc(id)
         .update({
             priority: statePriority ? false : true
@@ -56,37 +142,119 @@ function Card ({
         .catch(err => console.log('erro ao atualizar checkbox = ',err));
     }
 
-    const updateCheckboxIsDone = id => {
-        db.collection('userCards')
+    const updateCheckboxIsDone = async id => {
+        await db.collection('userCards')
         .doc(id)
         .update({
-            isDone: stateIsDone ? false : true
+            isDone: stateIsDone ? false : true,
+            isLate: stateIsLate ? false : true
         })
         .then(() => console.log('atualizou o isDone'))
         .catch(err => console.log('erro ao atualizar checkbox = ',err));
     }
 
+    useEffect(() => {
+        setStatePriority(priority);
+        setStateIsDone(isDone);
+    }, [ priority, isDone ]);
+
+    useEffect(() => {
+        priorityCard();
+        cardIsDone();
+    }, [ statePriority, stateIsDone ]);
+
+    useEffect(() => {
+        cardIsDone();
+
+        const fullDateNow = {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth() + 1,
+            day: new Date().getDate(),
+            hour: new Date().getHours(),
+            minute: new Date().getMinutes(),
+            second: new Date().getSeconds()
+        }
+        const partsOfDateNow = new Date(
+            fullDateNow.year,
+            fullDateNow.month,
+            fullDateNow.day,
+            fullDateNow.hour,
+            fullDateNow.minute,
+            fullDateNow.second
+        )
+
+        const differenceBetweenDates = partsOfDateCard.getTime() - partsOfDateNow.getTime();
+
+        const timer = setTimeout(() => {
+            if ( differenceBetweenDates >= 0 ) {
+                cardIsDone();
+            }
+        }, differenceBetweenDates );
+
+        return () => clearTimeout( timer );
+
+    }, [ day, hour ]);
+
     return (
-        <MainCards>
+        <MainCards style={{ border: borderCard ? borderCard : '3px solid #007bff' }}>
             <div className="card-header checkboxDivDone d-flex justify-content-start">
                 <label htmlFor="priorityCard" className="labelCheckbox">Prioritário:</label>
-                <input onClick={() => updateCheckboxPriority(id) } type="checkbox" name="priorityCard" onChange={e => setStatePriority(e.target.value)} defaultChecked={ statePriority } className="form-switch checkboxHome" />
+                <input 
+                    onClick={ () => updateCheckboxPriority(id) } 
+                    type="checkbox" 
+                    name="priorityCard"
+                    id="priorityCard" 
+                    onChange={e => {
+                        setStatePriority(e.target.checked);
+                        priorityCard();
+                    }} 
+                    checked={ statePriority } 
+                    className="form-switch checkboxHome" 
+                />
             </div>
             <div className="card-body" id="mobileView">
-                <h5 className="card-title mb-3"><strong>{title}</strong></h5>
-                <h6 className="card-subtitle mb-3 text-muted">{subTitle}</h6>
-                <p className="card-text">{description}</p>
-                <div className="d-flex justify-content-between mb-3" id="containerDateDone1">
-                    <small className="isDone"><strong>Data:</strong> {day} - {hour}</small>
+                <h5 className="card-title mb-3"><strong>{ title }</strong></h5>
+                <h6 className="card-subtitle mb-3 text-muted">{ subTitle }</h6>
+                <p className="card-text">{ description }</p>
+                <div className="d-flex justify-content-between mb-3" id="containerDateDone1" style={{ textDecoration: stateIsLate ? stateIsLate : 'none' }} >
+                    <small className="isDone"><strong>Data:</strong> { dateFormated } - { hour }</small>
                     <div className="checkboxDivDone">
                         <label htmlFor="reminderDone" className="labelCheckbox">Feito:</label>
-                        <input onClick={() => updateCheckboxIsDone(id) } type="checkbox" name="isDone" id="reminderDone" onChange={e => setStateIsDone(e.target.value)}  defaultChecked={ stateIsDone } className="checkboxHome" /> 
+                        <input 
+                            onClick={() => updateCheckboxIsDone(id) } 
+                            type="checkbox" 
+                            name="isDone" 
+                            id="reminderDone" 
+                            onChange={ e => {
+                                setStateIsDone(e.target.checked);
+                                cardIsDone( partsOfDateCard );
+                            }}  
+                            checked={ stateIsDone } 
+                            disabled={ stateIsDisabled }
+                            className="checkboxHome" 
+                        /> 
                     </div>
                 </div>
                 <div className="card-footer">
                     <div className="d-flex justify-content-between">
-                        <button type="button" className="btn btn-danger btn-sm">Excluir</button>
-                        <button onClick={ () => { getDataCard(id) } } data-toggle="modal" data-target="#editModal" type="button" className="btn btn-primary btn-sm">Editar</button>
+                        <button 
+                            onClick={ () => { getDataCard(id, "delete") } } 
+                            data-toggle="modal" 
+                            data-target="#deleteModal" 
+                            type="button" 
+                            className="btn btn-danger btn-sm"
+                        >
+                            Excluir
+                        </button>
+                        <button 
+                            onClick={ () => { getDataCard(id, "update") } } 
+                            data-toggle="modal" 
+                            data-target="#editModal" 
+                            type="button" 
+                            className="btn btn-primary btn-sm"
+                        >
+                            Editar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -94,4 +262,4 @@ function Card ({
     );
 }
 
-export default Card;
+export default memo(Card);

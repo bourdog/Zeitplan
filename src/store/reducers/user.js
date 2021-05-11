@@ -21,7 +21,8 @@ function userReducer (state = INITIAL_STATE, action) {
             return { 
                 ...state,
                 userLogin: true,
-                email: action.email
+                email: action.email,
+                name: action.name
             }
         case 'LOGOUT':
             return { 

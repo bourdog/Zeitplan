@@ -16,6 +16,10 @@ export const FormProfile = styled.form `
     margin: 2rem;
     padding: 1rem;
 
+    .notEqualPassword {
+        border: 2px solid red;
+    }
+
     @media (max-width: 500px) {
         margin: 0 1rem 1rem 1rem !important;
         flex-direction: column;
