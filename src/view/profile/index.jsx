@@ -12,17 +12,6 @@ function Profile () {
 
     const [ tab, setTab ] = useState( 0 );
 
-    const getAgeByBirthDate = birthday => {
-        
-        const dateAge = new Date( birthday );
-        
-        const dateNow = new Date();
-
-        const age = ( 60 * ( dateNow.getTime() - dateAge.getTime() ));
-
-        return age;
-    }
-
     return (
         <>
             <Navbar tab='Profile' />
@@ -49,17 +38,13 @@ function Profile () {
                             { lastNameUser }
                         </p>
                         <p>
-                            <strong>Idade: </strong>
-                            { getAgeByBirthDate( birthDateUser ) }
-                        </p>
-                        <p>
                             <strong>Data de nascimento: </strong>
                             { dateFormated }
                         </p>
                     </div> }
 
 
-                    { tab && <form action="#" className="formProfile tabContent" id="editar">
+                    { !!tab && <form action="#" className="formProfile tabContent" id="editar">
                         <p><strong>Nome:</strong></p>
                         <input className="form-control mb-2" type="text" placeholder="Seu nome" required />
                         <p><strong>Sobrenome:</strong></p>
