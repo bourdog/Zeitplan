@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import firebase from '../../../config/firebase';
@@ -8,7 +8,6 @@ function NavbarSignIn ({ tab }) {
 
     const nameUser = useSelector(state => state.user.name)
     const dispatch = useDispatch();
-    const db = firebase.firestore();
 
     const logout = () => {
         dispatch({

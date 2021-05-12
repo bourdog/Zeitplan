@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/navbar/navbarSignIn';
 import Table from '../../components/table';
+import { ContainerOverview, TitlePage } from './overviewCss';
 import firebase from 'firebase';
 import { useSelector } from 'react-redux';
 
@@ -13,8 +14,6 @@ function Overview () {
     const [ atrasado, setAtrasado ] = useState(0);
     const [ feito, setFeito ] = useState(0);
     const [ total, setTotal ] = useState(0);
-
-    const arrayOfCards = [];
 
     useEffect(() => { 
         const getUserCards = async () => {
@@ -44,15 +43,17 @@ function Overview () {
     }, []);
 
     return (
-        <>
+        <ContainerOverview>
             <Navbar tab="Overview" />
-            <Table 
-                cumprir={ cumprir }
-                atrasado={ atrasado }
-                feito={ feito }
-                total={ total }
-            />
-        </>
+            <TitlePage>
+                <Table 
+                    cumprir={ cumprir }
+                    atrasado={ atrasado }
+                    feito={ feito }
+                    total={ total }
+                />
+            </TitlePage>
+        </ContainerOverview>
     );
 }
 

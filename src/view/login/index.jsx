@@ -29,11 +29,13 @@ function Login () {
             email,
             password
         )
-        .then( async () => {
+        .then( async result => {
+            console.log( result )
             setIsAuth(true);
             setLoading(false);
             
-            await db.collection("userProfile").where("email", "==", email)
+            await db.collection("userProfile")
+            .where("email", "==", email)
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach(doc => {

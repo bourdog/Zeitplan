@@ -9,9 +9,14 @@ export const ContainerTable = styled.div`
     justify-content: space-evenly;
     margin: 1rem;
     width: 100%;
-    border-bottom: 1px solid rgb(209, 209, 209);
     font-size: 1rem;
     color: #6c757d;
+
+    .overview {
+        font-size: 1.5rem;
+        border-bottom: 1px solid rgb(209, 209, 209);
+        margin-bottom: 4rem;
+    }
 
     .aCumprir{
     border-bottom: 3px solid rgb(45, 141, 231) !important;

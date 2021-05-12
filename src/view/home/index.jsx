@@ -8,41 +8,32 @@ import { useDispatch, useSelector } from 'react-redux'
  
 function Home () {
 
-    const [createTitle, setCreateTitle] = useState();
-    const [createSubTitle, setCreateSubTitle] = useState();
-    const [createDescription, setCreateDescription] = useState();
-    const [createDay, setCreateDay] = useState();
-    const [createHour, setCreateHour] = useState();
-    const [createPriority, setCreatePriority] = useState(false);
+    const [ createTitle, setCreateTitle ] = useState();
+    const [ createSubTitle, setCreateSubTitle ] = useState();
+    const [ createDescription, setCreateDescription ] = useState();
+    const [ createDay, setCreateDay ] = useState();
+    const [ createHour, setCreateHour ] = useState();
+    const [ createPriority, setCreatePriority ] = useState(false);
 
-    const [editTitle, setEditTitle] = useState();
-    const [editSubTitle, setEditSubTitle] = useState();
-    const [editDescription, setEditDescription] = useState();
-    const [editDay, setEditDay] = useState();
-    const [editHour, setEditHour] = useState();
-    const [editPriority, setEditPriority] = useState();
+    const [ editTitle, setEditTitle ] = useState();
+    const [ editSubTitle, setEditSubTitle ] = useState();
+    const [ editDescription, setEditDescription ] = useState();
+    const [ editDay, setEditDay ] = useState();
+    const [ editHour, setEditHour ] = useState();
+    const [ editPriority, setEditPriority ] = useState();
 
-    const [loading, setLoading] = useState(false);
-    const [cards, setCards] = useState([]);
+    const [ loading, setLoading ] = useState(false);
+    const [ cards, setCards ] = useState([]);
 
     const db = firebase.firestore();
     const dispatch = useDispatch();
 
-    const emailUser = useSelector(state => state.user.email);
-    const idCard = useSelector(state => state.card.id);
-    const isUpdating = useSelector(state => state.card.isUpdate);
-    const isDeleting = useSelector(state => state.card.isDelete);
+    const emailUser = useSelector( state => state.user.email );
+    const idCard = useSelector( state => state.card.id );
+    const isUpdating = useSelector( state => state.card.isUpdate );
+    const isDeleting = useSelector( state => state.card.isDelete );
 
     const arrayOfCards = [];
-
-
-    const searchDate = (textDate) => {
-    
-        if(textDate.length === 2 || textDate.length === 5){
-            textDate = textDate + '/';
-            document.forms[0].date.value = textDate;
-        }
-    }
 
     const controlDateField = () => {
         const inputDate = document.getElementsByName("dateCreateCard")[0];
@@ -67,7 +58,7 @@ function Home () {
         }
     }
 
-    const handleSubmit = (callback) => (event) => {
+    const handleSubmit = callback => event => {
         event.preventDefault();
         callback();
     };
@@ -186,25 +177,15 @@ function Home () {
             setLoading(false);
             dispatch({ type: 'CARD_UPDATED' });
         }
-    }, [isUpdating]);
+    }, [ isUpdating ]);
 
     return (
         <BodyMain>
             <NavbarSignIn tab='home'/>
             <Reminders className="container d-flex justify-content-between">
-                <div className="reminder">
+                <div>
                     Lembretes
                 </div>
-                <form className="form-inline formSearch reminder" action="#" id="inputSearch">
-                <div className="d-flex align-items-start">
-                    <div className="form-group mb-2">
-                    <input type="search" className="form-control" placeholder="Buscar por data" name="date" onKeyPress={(e)=> searchDate(e.target.value)} maxLength="10" required />
-                    </div>
-                    <button type="submit" className="btn btn-secondary ml-2" form="inputSearch">
-                        <i className="bi bi-search"></i>
-                    </button>
-                </div>
-                </form>
             </Reminders>
             <div className="container d-flex justify-content-end my-2">
                 <button className="btn btn-primary" type="button" data-toggle="modal" data-target="#createModal">

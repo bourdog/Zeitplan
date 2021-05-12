@@ -66,7 +66,6 @@ function Register () {
         .then(async result => {
             await db.collection('userProfile')
             .add({
-                id: result.user.uid,
                 name: name,
                 lastName: lastName,
                 birthDate: birthDate,

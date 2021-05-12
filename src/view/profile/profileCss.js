@@ -3,8 +3,8 @@ import styled from 'styled-components';
 export const TitlePage = styled.div `
     align-items: flex-end;
     justify-content: space-evenly;
-    margin: 1rem;
-    width: 100%;
+    margin-top: 1rem;
+    width: auto;
     border-bottom: 1px solid rgb(209, 209, 209);
     font-size: 1.5rem;
     color: #6c757d;

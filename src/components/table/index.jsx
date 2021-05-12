@@ -6,7 +6,10 @@ function Table ({ cumprir, atrasado, feito, total }) {
     return (
         <ContainerTable>
             <div className="container d-flex flex-column justify-content-center">
-                <div className="container tabContent" id="diario">
+                <div className="container" id="diario">
+                <div className="container d-flex overview">
+                    Overview
+                </div>
                     <table className="table table-hover table-responsive-md text-center mt-3">
                         <thead>
                             <tr>
